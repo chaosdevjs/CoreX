@@ -1,3 +1,17 @@
+-- Key aus Pastebin laden
+local HttpService = game:GetService("HttpService")
+local correctKey = ""
+
+local success, result = pcall(function()
+    return game:HttpGet("https://pastebin.com/raw/J91SXgzW")
+end)
+
+if success then
+    correctKey = result:gsub("%s+", "")
+else
+    correctKey = "CoreX2024"
+end
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Players = game:GetService("Players")
@@ -12,7 +26,16 @@ local Window = Rayfield:CreateWindow({
     Theme = "Default",
     DisableRayfieldPrompts = false,
     ConfigurationSaving = { Enabled = false },
-    KeySystem = false,
+    KeySystem = true,
+    KeySettings = {
+        Title = "🔪 CoreX | Mörder Mystery",
+        Subtitle = "Key System",
+        Note = "Hol dir den Key auf unserem Discord!\ndiscord.gg/vT78ty4bek",
+        FileName = "CoreXKey",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = {correctKey}
+    }
 })
 
 -- ════════════════════════════════
@@ -20,7 +43,7 @@ local Window = Rayfield:CreateWindow({
 -- ════════════════════════════════
 local InfoTab = Window:CreateTab("📋 Info", 4483362458)
 InfoTab:CreateSection("👤 Credits")
-InfoTab:CreateLabel("🔪 CoreX | Mörder Mystery")
+InfoTab:CreateLabel("🔪 CoreX | Mörder Mystery Script")
 InfoTab:CreateLabel("Made by Chaos")
 InfoTab:CreateSection("🌐 Social Media")
 InfoTab:CreateLabel("💬 Discord:")
@@ -48,7 +71,7 @@ InfoTab:CreateButton({
     end,
 })
 InfoTab:CreateSection("ℹ️ Script Info")
-InfoTab:CreateLabel("Version: 6.0")
+InfoTab:CreateLabel("Version: 7.0")
 InfoTab:CreateLabel("Spiel: Murder Mystery 2")
 InfoTab:CreateLabel("Made by Chaos")
 
@@ -56,7 +79,6 @@ InfoTab:CreateLabel("Made by Chaos")
 -- PLAYER TAB
 -- ════════════════════════════════
 local PlayerTab = Window:CreateTab("👤 Player", 4483362458)
-
 PlayerTab:CreateSection("Überleben")
 
 PlayerTab:CreateToggle({
@@ -114,7 +136,6 @@ PlayerTab:CreateToggle({
 })
 
 PlayerTab:CreateSection("Speed")
-
 local speedEnabled = false
 local currentSpeed = 16
 
@@ -152,7 +173,6 @@ PlayerTab:CreateSlider({
 })
 
 PlayerTab:CreateSection("Jump")
-
 local jumpEnabled = false
 local currentJump = 50
 
@@ -203,7 +223,6 @@ PlayerTab:CreateSlider({
 -- CHAMS & INFO TAB
 -- ════════════════════════════════
 local ChamsTab = Window:CreateTab("🎨 Chams & Info", 4483362458)
-
 ChamsTab:CreateSection("🔴 Mörder = Rot  |  🔵 Sheriff = Blau  |  🟢 Normal = Grün")
 
 local highlights = {}
@@ -228,7 +247,7 @@ local function applyHighlights()
                 if n:find("knife") or n:find("blade") or n:find("murder") then
                     hl.FillColor = Color3.fromRGB(255, 30, 30)
                     hl.OutlineColor = Color3.fromRGB(200, 0, 0)
-                elseif n:find("gun") or n:find("sheriff") then
+                elseif n:find("gun") or n:find("sheriff") or n:find("revolver") then
                     hl.FillColor = Color3.fromRGB(30, 100, 255)
                     hl.OutlineColor = Color3.fromRGB(0, 60, 200)
                 else
@@ -262,35 +281,32 @@ ChamsTab:CreateToggle({
 })
 
 ChamsTab:CreateSection("🔫 Dropped Gun Chams")
-
 local droppedGunHighlights = {}
 local droppedGunActive = false
 
-local function updateDroppedGunChams()
+RunService.Heartbeat:Connect(function()
+    if not droppedGunActive then return end
     for _, h in pairs(droppedGunHighlights) do
         if h and h.Parent then h:Destroy() end
     end
     droppedGunHighlights = {}
-    if not droppedGunActive then return end
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("Model") or obj:IsA("Tool") then
             local n = obj.Name:lower()
             if n:find("gun") or n:find("revolver") or n:find("sheriff") then
-                local hl = Instance.new("Highlight")
-                hl.Adornee = obj
-                hl.FillColor = Color3.fromRGB(255, 200, 0)
-                hl.OutlineColor = Color3.fromRGB(255, 150, 0)
-                hl.FillTransparency = 0.3
-                hl.OutlineTransparency = 0
-                hl.Parent = obj
-                table.insert(droppedGunHighlights, hl)
+                if not obj:IsDescendantOf(LocalPlayer.Character or Instance.new("Folder")) then
+                    local hl = Instance.new("Highlight")
+                    hl.Adornee = obj
+                    hl.FillColor = Color3.fromRGB(255, 200, 0)
+                    hl.OutlineColor = Color3.fromRGB(255, 150, 0)
+                    hl.FillTransparency = 0.3
+                    hl.OutlineTransparency = 0
+                    hl.Parent = obj
+                    table.insert(droppedGunHighlights, hl)
+                end
             end
         end
     end
-end
-
-RunService.Heartbeat:Connect(function()
-    if droppedGunActive then updateDroppedGunChams() end
 end)
 
 ChamsTab:CreateToggle({
@@ -428,21 +444,22 @@ ChamsTab:CreateButton({
 -- GUN TAB
 -- ════════════════════════════════
 local GunTab = Window:CreateTab("🔫 Gun", 4483362458)
-
-GunTab:CreateSection("🔔 Gun Benachrichtigung")
+GunTab:CreateSection("🔔 Benachrichtigung")
 
 local notifyGunActive = false
+local notifiedGuns = {}
+
 RunService.Heartbeat:Connect(function()
     if not notifyGunActive then return end
     for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("Tool") or (obj:IsA("Model") and obj.Name:lower():find("gun")) then
+        if (obj:IsA("Tool") or obj:IsA("Model")) then
             local n = obj.Name:lower()
-            if n:find("gun") or n:find("revolver") then
-                if not obj:GetAttribute("CoreXNotified") then
-                    obj:SetAttribute("CoreXNotified", true)
+            if (n:find("gun") or n:find("revolver") or n:find("sheriff")) then
+                if not notifiedGuns[obj] then
+                    notifiedGuns[obj] = true
                     Rayfield:Notify({
                         Title = "🔫 Gun Dropped!",
-                        Content = "Eine Waffe liegt bei: "..tostring(obj.Name),
+                        Content = "Waffe gefunden: "..obj.Name,
                         Duration = 5,
                         Image = 4483362458,
                     })
@@ -458,6 +475,7 @@ GunTab:CreateToggle({
     Flag = "NotifyGun",
     Callback = function(state)
         notifyGunActive = state
+        if not state then notifiedGuns = {} end
     end,
 })
 
@@ -475,8 +493,8 @@ RunService.Heartbeat:Connect(function()
             local n = obj.Name:lower()
             if n:find("gun") or n:find("revolver") or n:find("sheriff") then
                 local part = obj:FindFirstChildOfClass("BasePart") or obj.PrimaryPart
-                if part and (hrp.Position - part.Position).Magnitude < 10 then
-                    hrp.CFrame = CFrame.new(part.Position)
+                if part and (hrp.Position - part.Position).Magnitude < 15 then
+                    hrp.CFrame = CFrame.new(part.Position + Vector3.new(0,2,0))
                 end
             end
         end
@@ -493,7 +511,7 @@ GunTab:CreateToggle({
 })
 
 GunTab:CreateButton({
-    Name = "Grab Gun (Nächste Waffe aufheben)",
+    Name = "Grab Gun (Nächste Waffe)",
     Callback = function()
         local char = LocalPlayer.Character
         if not char then return end
@@ -513,8 +531,8 @@ GunTab:CreateButton({
             end
         end
         if nearest then
-            hrp.CFrame = CFrame.new(nearest.Position)
-            Rayfield:Notify({ Title = "🔫 Gun!", Content = "Zur nächsten Waffe teleportiert!", Duration = 3, Image = 4483362458 })
+            hrp.CFrame = CFrame.new(nearest.Position + Vector3.new(0,2,0))
+            Rayfield:Notify({ Title = "🔫 Gun!", Content = "Zur Waffe teleportiert!", Duration = 3, Image = 4483362458 })
         else
             Rayfield:Notify({ Title = "❌ Keine Waffe", Content = "Keine Waffe gefunden!", Duration = 3, Image = 4483362458 })
         end
@@ -525,26 +543,81 @@ GunTab:CreateButton({
 -- AUTOFARM TAB
 -- ════════════════════════════════
 local FarmTab = Window:CreateTab("🌾 Autofarm", 4483362458)
-
 FarmTab:CreateSection("Coins Farmen")
 
 local farmActive = false
 local farmSpeed = 60
 local flingWhenDone = false
 local resetWhenFull = false
+local coinConnection = nil
+
+local function stopFarm()
+    farmActive = false
+    if coinConnection then
+        coinConnection:Disconnect()
+        coinConnection = nil
+    end
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = 16 end
+    end
+end
+
+local function startFarm()
+    farmActive = true
+    if coinConnection then coinConnection:Disconnect() end
+    coinConnection = RunService.Heartbeat:Connect(function()
+        local char = LocalPlayer.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if not hrp or not hum then return end
+        hum.WalkSpeed = farmSpeed
+        local coinNames = {"Coin", "coin", "CoinDrop", "GoldCoin", "Value", "Drop"}
+        local nearest, nearDist = nil, math.huge
+        for _, obj in pairs(workspace:GetDescendants()) do
+            for _, name in pairs(coinNames) do
+                if obj.Name:lower():find(name:lower()) then
+                    local part = nil
+                    if obj:IsA("BasePart") or obj:IsA("MeshPart") then
+                        part = obj
+                    elseif obj:IsA("Model") then
+                        part = obj.PrimaryPart or obj:FindFirstChildOfClass("BasePart")
+                    end
+                    if part then
+                        local d = (hrp.Position - part.Position).Magnitude
+                        if d < nearDist then nearDist = d; nearest = part end
+                    end
+                    break
+                end
+            end
+        end
+        if nearest then
+            hrp.CFrame = CFrame.new(nearest.Position + Vector3.new(0,2,0))
+        else
+            if resetWhenFull then
+                stopFarm()
+                Rayfield:Notify({ Title = "🌾 Farm", Content = "Keine Coins! Reset...", Duration = 3, Image = 4483362458 })
+                wait(1)
+                LocalPlayer:LoadCharacter()
+            end
+        end
+    end)
+end
 
 FarmTab:CreateToggle({
     Name = "Toggle Autofarm",
     CurrentValue = false,
     Flag = "AutoFarm",
     Callback = function(state)
-        farmActive = state
-        Rayfield:Notify({
-            Title = "Autofarm",
-            Content = state and "✅ Autofarm gestartet!" or "❌ Autofarm gestoppt!",
-            Duration = 3,
-            Image = 4483362458,
-        })
+        if state then
+            startFarm()
+            Rayfield:Notify({ Title = "🌾 Autofarm", Content = "✅ Gestartet!", Duration = 3, Image = 4483362458 })
+        else
+            stopFarm()
+            Rayfield:Notify({ Title = "🌾 Autofarm", Content = "❌ Gestoppt!", Duration = 3, Image = 4483362458 })
+        end
     end,
 })
 
@@ -560,34 +633,10 @@ FarmTab:CreateSlider({
     end,
 })
 
-RunService.Heartbeat:Connect(function()
-    if not farmActive then return end
-    local char = LocalPlayer.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if not hrp or not hum then return end
-    hum.WalkSpeed = farmSpeed
-    local nearest, nearDist = nil, math.huge
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if (obj.Name == "Coin" or obj.Name == "CoinDrop") and obj:IsA("BasePart") then
-            local d = (hrp.Position - obj.Position).Magnitude
-            if d < nearDist then nearDist = d; nearest = obj end
-        end
-    end
-    if nearest then
-        hrp.CFrame = CFrame.new(nearest.Position)
-    else
-        if resetWhenFull then
-            LocalPlayer:LoadCharacter()
-        end
-    end
-end)
-
 FarmTab:CreateSection("Optionen")
 
 FarmTab:CreateToggle({
-    Name = "Reset wenn keine Coins mehr",
+    Name = "Reset wenn keine Coins",
     CurrentValue = false,
     Flag = "ResetFull",
     Callback = function(state)
@@ -607,17 +656,14 @@ FarmTab:CreateToggle({
                 for _, player in pairs(Players:GetPlayers()) do
                     if player ~= LocalPlayer and player.Character then
                         local tool = player.Character:FindFirstChildOfClass("Tool")
-                        if tool then
-                            local n = tool.Name:lower()
-                            if n:find("knife") or n:find("blade") then
-                                local tHrp = player.Character:FindFirstChild("HumanoidRootPart")
-                                if tHrp then
-                                    local vel = Instance.new("BodyVelocity")
-                                    vel.Velocity = Vector3.new(math.random(-100,100), 500, math.random(-100,100))
-                                    vel.MaxForce = Vector3.new(9e9,9e9,9e9)
-                                    vel.Parent = tHrp
-                                    game:GetService("Debris"):AddItem(vel, 0.1)
-                                end
+                        if tool and (tool.Name:lower():find("knife") or tool.Name:lower():find("blade")) then
+                            local tHrp = player.Character:FindFirstChild("HumanoidRootPart")
+                            if tHrp then
+                                local vel = Instance.new("BodyVelocity")
+                                vel.Velocity = Vector3.new(math.random(-100,100), 500, math.random(-100,100))
+                                vel.MaxForce = Vector3.new(9e9,9e9,9e9)
+                                vel.Parent = tHrp
+                                game:GetService("Debris"):AddItem(vel, 0.1)
                             end
                         end
                     end
@@ -632,7 +678,6 @@ FarmTab:CreateToggle({
     CurrentValue = false,
     Flag = "KillMurderOnly",
     Callback = function(state)
-        -- Nur aktiv wenn nur noch Mörder im Spiel
         RunService.Heartbeat:Connect(function()
             if not state then return end
             local alivePlayers = 0
@@ -667,8 +712,7 @@ FarmTab:CreateToggle({
 -- TELEPORT TAB
 -- ════════════════════════════════
 local TpTab = Window:CreateTab("🌀 Teleport", 4483362458)
-
-TpTab:CreateSection("📍 Schnell-Teleport")
+TpTab:CreateSection("📍 Karte & Lobby")
 
 TpTab:CreateButton({
     Name = "Tp zur Map",
@@ -677,18 +721,36 @@ TpTab:CreateButton({
         if not char then return end
         local hrp = char:FindFirstChild("HumanoidRootPart")
         if not hrp then return end
-        local map = workspace:FindFirstChild("Map") or workspace:FindFirstChild("map")
-            or workspace:FindFirstChild("Town") or workspace:FindFirstChild("Level")
-        if map then
-            local part = map:FindFirstChildOfClass("BasePart")
-            if part then
-                hrp.CFrame = CFrame.new(part.Position + Vector3.new(0,5,0))
-                Rayfield:Notify({ Title = "✅ Teleportiert!", Content = "Zur Map teleportiert!", Duration = 3, Image = 4483362458 })
-                return
+        local found = false
+        local searchNames = {"Map", "map", "Town", "Level", "Game", "Round", "Arena", "Stadium"}
+        for _, name in pairs(searchNames) do
+            local obj = workspace:FindFirstChild(name)
+            if obj then
+                local part = obj:FindFirstChildOfClass("BasePart") or obj.PrimaryPart
+                if part then
+                    hrp.CFrame = CFrame.new(part.Position + Vector3.new(0,5,0))
+                    found = true
+                    Rayfield:Notify({ Title = "✅ Teleportiert!", Content = "Zur Map: "..name, Duration = 3, Image = 4483362458 })
+                    break
+                end
             end
         end
-        hrp.CFrame = CFrame.new(Vector3.new(0, 10, 0))
-        Rayfield:Notify({ Title = "✅ Teleportiert!", Content = "Zur Map teleportiert!", Duration = 3, Image = 4483362458 })
+        if not found then
+            for _, obj in pairs(workspace:GetChildren()) do
+                if obj:IsA("Model") and obj ~= LocalPlayer.Character and obj.Name ~= "Camera" then
+                    local part = obj:FindFirstChildOfClass("BasePart")
+                    if part then
+                        hrp.CFrame = CFrame.new(part.Position + Vector3.new(0,5,0))
+                        found = true
+                        Rayfield:Notify({ Title = "✅ Teleportiert!", Content = "Zur Map teleportiert!", Duration = 3, Image = 4483362458 })
+                        break
+                    end
+                end
+            end
+        end
+        if not found then
+            Rayfield:Notify({ Title = "❌ Fehler", Content = "Map nicht gefunden!", Duration = 3, Image = 4483362458 })
+        end
     end,
 })
 
@@ -699,17 +761,34 @@ TpTab:CreateButton({
         if not char then return end
         local hrp = char:FindFirstChild("HumanoidRootPart")
         if not hrp then return end
-        local lobby = workspace:FindFirstChild("Lobby") or workspace:FindFirstChild("lobby")
-            or workspace:FindFirstChild("SpawnLocation")
-        if lobby then
-            local part = lobby:IsA("BasePart") and lobby or lobby:FindFirstChildOfClass("BasePart")
-            if part then
-                hrp.CFrame = CFrame.new(part.Position + Vector3.new(0,5,0))
+        local found = false
+        -- Alle SpawnLocations suchen (MM2 Lobby Methode)
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("SpawnLocation") then
+                hrp.CFrame = CFrame.new(obj.Position + Vector3.new(0,5,0))
+                found = true
                 Rayfield:Notify({ Title = "✅ Teleportiert!", Content = "Zur Lobby teleportiert!", Duration = 3, Image = 4483362458 })
-                return
+                break
             end
         end
-        Rayfield:Notify({ Title = "❌ Fehler", Content = "Lobby nicht gefunden!", Duration = 3, Image = 4483362458 })
+        if not found then
+            local searchNames = {"Lobby", "lobby", "Spawn", "spawn", "WaitingArea", "Hub"}
+            for _, name in pairs(searchNames) do
+                local obj = workspace:FindFirstChild(name)
+                if obj then
+                    local part = obj:IsA("BasePart") and obj or obj:FindFirstChildOfClass("BasePart")
+                    if part then
+                        hrp.CFrame = CFrame.new(part.Position + Vector3.new(0,5,0))
+                        found = true
+                        Rayfield:Notify({ Title = "✅ Teleportiert!", Content = "Zur Lobby teleportiert!", Duration = 3, Image = 4483362458 })
+                        break
+                    end
+                end
+            end
+        end
+        if not found then
+            Rayfield:Notify({ Title = "❌ Fehler", Content = "Lobby nicht gefunden!", Duration = 3, Image = 4483362458 })
+        end
     end,
 })
 
@@ -735,6 +814,8 @@ TpTab:CreateButton({
         if nearest then
             hrp.CFrame = CFrame.new(nearest.Position + Vector3.new(3,0,0))
             Rayfield:Notify({ Title = "✅ Teleportiert!", Content = "Zum nächsten Spieler!", Duration = 3, Image = 4483362458 })
+        else
+            Rayfield:Notify({ Title = "❌ Fehler", Content = "Kein Spieler gefunden!", Duration = 3, Image = 4483362458 })
         end
     end,
 })
@@ -773,7 +854,7 @@ TpTab:CreateButton({
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
                 local tool = player.Character:FindFirstChildOfClass("Tool")
-                if tool and (tool.Name:lower():find("gun") or tool.Name:lower():find("sheriff")) then
+                if tool and (tool.Name:lower():find("gun") or tool.Name:lower():find("sheriff") or tool.Name:lower():find("revolver")) then
                     local tHrp = player.Character:FindFirstChild("HumanoidRootPart")
                     if tHrp then
                         hrp.CFrame = CFrame.new(tHrp.Position + Vector3.new(3,0,0))
@@ -791,7 +872,6 @@ TpTab:CreateButton({
 -- MISC TAB
 -- ════════════════════════════════
 local MiscTab = Window:CreateTab("⚙️ Misc", 4483362458)
-
 MiscTab:CreateSection("Welt")
 
 MiscTab:CreateToggle({
@@ -836,28 +916,6 @@ MiscTab:CreateToggle({
 })
 
 MiscTab:CreateToggle({
-    Name = "Auto Coins sammeln",
-    CurrentValue = false,
-    Flag = "AutoCoins",
-    Callback = function(state)
-        RunService.Heartbeat:Connect(function()
-            if not state then return end
-            local char = LocalPlayer.Character
-            if not char then return end
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if (obj.Name == "Coin" or obj.Name == "CoinDrop") and obj:IsA("BasePart") then
-                    if (hrp.Position - obj.Position).Magnitude < 60 then
-                        hrp.CFrame = CFrame.new(obj.Position)
-                    end
-                end
-            end
-        end)
-    end,
-})
-
-MiscTab:CreateToggle({
     Name = "Sounds aus",
     CurrentValue = false,
     Flag = "NoSound",
@@ -867,6 +925,25 @@ MiscTab:CreateToggle({
         end
     end,
 })
+
+MiscTab:CreateToggle({
+    Name = "No Clip",
+    CurrentValue = false,
+    Flag = "NoClip",
+    Callback = function(state)
+        RunService.Stepped:Connect(function()
+            if not state then return end
+            local char = LocalPlayer.Character
+            if char then
+                for _, p in pairs(char:GetDescendants()) do
+                    if p:IsA("BasePart") then p.CanCollide = false end
+                end
+            end
+        end)
+    end,
+})
+
+MiscTab:CreateSection("Aktionen")
 
 MiscTab:CreateButton({
     Name = "Charakter neu laden",
@@ -884,4 +961,4 @@ Rayfield:Notify({
 })
 
 Rayfield:LoadConfiguration()
-print("[CoreX | Mörder Mystery v6.0] ✅ Geladen! Made by Chaos")
+print("[CoreX | Mörder Mystery v7.0] ✅ Geladen! Made by Chaos")
