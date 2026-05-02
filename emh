@@ -1,0 +1,447 @@
+-- CoreX | Emergency Hamburg | Orion Mobile Script
+-- Orion Library by shlexware (Mobile optimized)
+
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+
+local Window = OrionLib:MakeWindow({
+    Name = "CoreX | Emergency Hamburg",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "EH_Config",
+    IntroEnabled = true,
+    IntroText = "CoreX | Emergency Hamburg",
+    IntroIcon = "rbxassetid://4483345998",
+    Icon = "rbxassetid://4483345998",
+    CloseCallback = function()
+        OrionLib:Destroy()
+    end
+})
+
+-- â”€â”€â”€ SERVICES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+local Players    = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Character   = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid    = Character:WaitForChild("Humanoid")
+local RootPart    = Character:WaitForChild("HumanoidRootPart")
+
+-- â”€â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+local state = {
+    speedEnabled   = false,
+    flyEnabled     = false,
+    noclipEnabled  = false,
+    espEnabled     = false,
+    auraEnabled    = false,
+    antiRagdoll    = false,
+    speedValue     = 16,
+    flySpeed       = 50,
+    auraRadius     = 10,
+}
+
+-- â”€â”€â”€ TAB: PLAYER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+local PlayerTab = Window:MakeTab({
+    Name = "Player",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+PlayerTab:AddSection({ Name = "Movement" })
+
+-- Speed Toggle
+PlayerTab:AddToggle({
+    Name = "Speed Hack",
+    Default = false,
+    Save = true,
+    Flag = "SpeedHack",
+    Callback = function(val)
+        state.speedEnabled = val
+        if val then
+            Humanoid.WalkSpeed = state.speedValue
+        else
+            Humanoid.WalkSpeed = 16
+        end
+    end
+})
+
+-- Speed Slider
+PlayerTab:AddSlider({
+    Name = "Walk Speed",
+    Min = 16,
+    Max = 500,
+    Default = 100,
+    Color = Color3.fromRGB(255, 80, 80),
+    Increment = 1,
+    ValueName = "Speed",
+    Save = true,
+    Flag = "SpeedSlider",
+    Callback = function(val)
+        state.speedValue = val
+        if state.speedEnabled then
+            Humanoid.WalkSpeed = val
+        end
+    end
+})
+
+PlayerTab:AddSection({ Name = "Fly" })
+
+-- Fly Toggle
+local flyBody
+PlayerTab:AddToggle({
+    Name = "Fly",
+    Default = false,
+    Save = true,
+    Flag = "FlyToggle",
+    Callback = function(val)
+        state.flyEnabled = val
+        if val then
+            -- Fly implementation
+            local bg = Instance.new("BodyGyro", RootPart)
+            bg.P = 9e4; bg.maxTorque = Vector3.new(9e9, 9e9, 9e9); bg.CFrame = RootPart.CFrame
+            local bv = Instance.new("BodyVelocity", RootPart)
+            bv.Velocity = Vector3.zero; bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+            flyBody = { bg = bg, bv = bv }
+
+            local cam = workspace.CurrentCamera
+            RunService:BindToRenderStep("FlyEH", 300, function()
+                if not state.flyEnabled then return end
+                local cf = cam.CFrame
+                local dir = Vector3.zero
+                local uis = game:GetService("UserInputService")
+                if uis:IsKeyDown(Enum.KeyCode.W) then dir = dir + cf.LookVector end
+                if uis:IsKeyDown(Enum.KeyCode.S) then dir = dir - cf.LookVector end
+                if uis:IsKeyDown(Enum.KeyCode.A) then dir = dir - cf.RightVector end
+                if uis:IsKeyDown(Enum.KeyCode.D) then dir = dir + cf.RightVector end
+                if uis:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.yAxis end
+                if uis:IsKeyDown(Enum.KeyCode.LeftShift) then dir = dir - Vector3.yAxis end
+                bv.Velocity = dir * state.flySpeed
+                bg.CFrame = cf
+            end)
+        else
+            RunService:UnbindFromRenderStep("FlyEH")
+            if flyBody then
+                flyBody.bg:Destroy()
+                flyBody.bv:Destroy()
+                flyBody = nil
+            end
+        end
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "Fly Speed",
+    Min = 10,
+    Max = 300,
+    Default = 50,
+    Color = Color3.fromRGB(80, 180, 255),
+    Increment = 5,
+    ValueName = "Speed",
+    Save = true,
+    Flag = "FlySpeed",
+    Callback = function(val)
+        state.flySpeed = val
+    end
+})
+
+PlayerTab:AddSection({ Name = "Misc" })
+
+-- NoClip
+PlayerTab:AddToggle({
+    Name = "NoClip",
+    Default = false,
+    Save = false,
+    Flag = "NoClip",
+    Callback = function(val)
+        state.noclipEnabled = val
+        if val then
+            RunService:BindToRenderStep("NoClipEH", 200, function()
+                if Character then
+                    for _, part in ipairs(Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        else
+            RunService:UnbindFromRenderStep("NoClipEH")
+            for _, part in ipairs(Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+})
+
+-- Anti Ragdoll
+PlayerTab:AddToggle({
+    Name = "Anti Ragdoll",
+    Default = false,
+    Save = true,
+    Flag = "AntiRagdoll",
+    Callback = function(val)
+        state.antiRagdoll = val
+        if val then
+            for _, v in ipairs(Character:GetDescendants()) do
+                if v:IsA("BallSocketConstraint") or v:IsA("HingeConstraint") then
+                    v.Enabled = false
+                end
+            end
+        else
+            for _, v in ipairs(Character:GetDescendants()) do
+                if v:IsA("BallSocketConstraint") or v:IsA("HingeConstraint") then
+                    v.Enabled = true
+                end
+            end
+        end
+    end
+})
+
+-- Infinite Jump
+PlayerTab:AddToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Save = true,
+    Flag = "InfJump",
+    Callback = function(val)
+        game:GetService("UserInputService").JumpRequest:Connect(function()
+            if val and Character and Humanoid then
+                Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    end
+})
+
+-- â”€â”€â”€ TAB: VISUAL / ESP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+local VisualTab = Window:MakeTab({
+    Name = "Visual",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+VisualTab:AddSection({ Name = "Player ESP" })
+
+local espHighlights = {}
+
+local function clearESP()
+    for _, h in pairs(espHighlights) do
+        if h then h:Destroy() end
+    end
+    espHighlights = {}
+end
+
+local function updateESP()
+    clearESP()
+    if not state.espEnabled then return end
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            local h = Instance.new("Highlight")
+            h.FillColor = Color3.fromRGB(255, 50, 50)
+            h.OutlineColor = Color3.fromRGB(255, 255, 255)
+            h.FillTransparency = 0.5
+            h.OutlineTransparency = 0
+            h.Adornee = plr.Character
+            h.Parent = plr.Character
+            espHighlights[plr.Name] = h
+        end
+    end
+end
+
+VisualTab:AddToggle({
+    Name = "Player ESP (Highlight)",
+    Default = false,
+    Save = false,
+    Flag = "ESPToggle",
+    Callback = function(val)
+        state.espEnabled = val
+        updateESP()
+        if val then
+            Players.PlayerAdded:Connect(function(p)
+                p.CharacterAdded:Connect(function()
+                    task.wait(1)
+                    updateESP()
+                end)
+            end)
+            Players.PlayerRemoving:Connect(function(p)
+                if espHighlights[p.Name] then
+                    espHighlights[p.Name]:Destroy()
+                    espHighlights[p.Name] = nil
+                end
+            end)
+        else
+            clearESP()
+        end
+    end
+})
+
+VisualTab:AddSection({ Name = "Aura / AutoFarm" })
+
+PlayerTab:AddSection({ Name = "Teleport" })
+
+-- Teleport to waypoint / position
+PlayerTab:AddButton({
+    Name = "Teleport to Spawn",
+    Callback = function()
+        local spawns = workspace:FindFirstChild("Spawns")
+        if spawns then
+            local sp = spawns:GetChildren()[1]
+            if sp then
+                RootPart.CFrame = sp.CFrame + Vector3.new(0, 5, 0)
+            end
+        else
+            RootPart.CFrame = CFrame.new(0, 10, 0)
+        end
+        OrionLib:MakeNotification({
+            Name = "Teleport",
+            Content = "Zum Spawn teleportiert!",
+            Image = "rbxassetid://4483345998",
+            Time = 3
+        })
+    end
+})
+
+-- â”€â”€â”€ TAB: VEHICLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+local VehicleTab = Window:MakeTab({
+    Name = "Fahrzeug",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+VehicleTab:AddSection({ Name = "Fahrzeug Hacks" })
+
+VehicleTab:AddButton({
+    Name = "Max Turbo / Boost",
+    Callback = function()
+        local seat = LocalPlayer.Character:FindFirstChildOfClass("VehicleSeat")
+            or LocalPlayer.Character:FindFirstChildWhichIsA("Seat")
+        if seat then
+            seat.MaxSpeed = 9999
+            seat.Torque   = 9999
+            seat.TurnSpeed = 50
+            OrionLib:MakeNotification({
+                Name = "Fahrzeug",
+                Content = "Max Speed aktiviert!",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = "Fehler",
+                Content = "Du sitzt in keinem Fahrzeug!",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        end
+    end
+})
+
+VehicleTab:AddToggle({
+    Name = "Vehicle No-Flip",
+    Default = false,
+    Save = false,
+    Flag = "NoFlip",
+    Callback = function(val)
+        RunService:BindToRenderStep("NoFlipEH", 100, function()
+            if not val then return end
+            local seat = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("VehicleSeat")
+            if seat then
+                seat.AssemblyLinearVelocity = Vector3.new(
+                    seat.AssemblyLinearVelocity.X,
+                    math.max(seat.AssemblyLinearVelocity.Y, 0),
+                    seat.AssemblyLinearVelocity.Z
+                )
+            end
+        end)
+    end
+})
+
+-- â”€â”€â”€ TAB: MISC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+MiscTab:AddSection({ Name = "Chat / Spam" })
+
+MiscTab:AddButton({
+    Name = "Send 'Code 3 Response'",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
+            and game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents
+                :FindFirstChild("SayMessageRequest")
+                :FireServer("Code 3 Response! ðŸš¨", "All")
+    end
+})
+
+MiscTab:AddSection({ Name = "Anti-AFK" })
+
+MiscTab:AddToggle({
+    Name = "Anti-AFK",
+    Default = true,
+    Save = true,
+    Flag = "AntiAFK",
+    Callback = function(val)
+        if val then
+            local VirtualUser = game:GetService("VirtualUser")
+            game:GetService("Players").LocalPlayer.Idled:Connect(function()
+                VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            end)
+        end
+    end
+})
+
+MiscTab:AddSection({ Name = "Character" })
+
+MiscTab:AddSlider({
+    Name = "Jump Power",
+    Min = 50,
+    Max = 500,
+    Default = 50,
+    Color = Color3.fromRGB(100, 255, 100),
+    Increment = 10,
+    ValueName = "Power",
+    Save = true,
+    Flag = "JumpPower",
+    Callback = function(val)
+        Humanoid.JumpHeight = val
+    end
+})
+
+MiscTab:AddButton({
+    Name = "Reset Character",
+    Callback = function()
+        Humanoid.Health = 0
+    end
+})
+
+-- â”€â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+OrionLib:Init()
+
+OrionLib:MakeNotification({
+    Name = "CoreX | Emergency Hamburg",
+    Content = "Script geladen! Viel SpaÃŸ ðŸš¨",
+    Image = "rbxassetid://4483345998",
+    Time = 5
+})
+
+-- Keep walkspeed persistent on respawn
+LocalPlayer.CharacterAdded:Connect(function(char)
+    Character  = char
+    Humanoid   = char:WaitForChild("Humanoid")
+    RootPart   = char:WaitForChild("HumanoidRootPart")
+    task.wait(0.5)
+    if state.speedEnabled then
+        Humanoid.WalkSpeed = state.speedValue
+    end
+    if state.antiRagdoll then
+        for _, v in ipairs(char:GetDescendants()) do
+            if v:IsA("BallSocketConstraint") or v:IsA("HingeConstraint") then
+                v.Enabled = false
+            end
+        end
+    end
+end)
