@@ -1,1 +1,633 @@
+- =============================================
+-- HAUPTRETABLE
+-- =============================================
 
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+MainTab:AddSection({ Name = "Hauptregisterkarte\nVoreX / Notruf Hamburg — Informationen und Community." })
+MainTab:AddSection({ Name = "Spielinformationen" })
+MainTab:AddParagraph("Spielinformationen", "Spielname: Emergency Hamburg\nSpiel-ID: 2992873140")
+MainTab:AddSection({ Name = "VoreX Community" })
+MainTab:AddParagraph("VoreX Discord.", "Tritt unserem Discord-Server bei.")
+MainTab:AddButton({
+    Name = "Discord beitreten",
+    Callback = Funktion()
+        setclipboard("https://discord.gg/vorex")
+        OrionLib:MakeNotification({
+            Name = "VoreX",
+            Inhalt = "Discord-Link in die Zwischenablage kopiert!",
+            Bild = "rbxassetid://4483345998",
+            Zeit = 3
+        })
+    Ende
+})
+ =============================================
+-- AIMBOT-TAB
+-- =============================================
+
+local AimbotTab = Window:MakeTab({
+    Name = "Aimbot",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+AimbotTab:AddSection({ Name = "Aimbot Tab\nAutomatisches und präzises Anvisieren von Zielen!" })
+AimbotTab:AddSection({ Name = "Haupteinstellungen" })
+
+AimbotTab:AddToggle({
+    Name = "Aimbot aktivieren", Standardwert = false, Speichern = true, Flag = "Aimbot aktiviert",
+    Callback = function(v) _G.AimbotEnabled = v end
+})
+AimbotTab:AddToggle({
+    Name = "Mobile Button", Standardwert = false, Speichern = true, Flag = "AimbotMobileButton",
+    Callback = function(v) _G.AimbotMobileButton = v end
+})
+AimbotTab:AddKeybind({
+    Name = "Aimbot-Tastenbelegung", Standard = "Berührung", Speichern = true, Flag = "Aimbot-Tastenbelegung",
+    Callback = function(v) _G.AimbotKeybind = v end
+})
+
+AimbotTab:AddSection({ Name = "Sichtbarkeit & Überprüfungen" })
+AimbotTab:AddToggle({
+    Name = "Wall Check", Standardwert = false, Speichern = true, Flag = "AimbotWallCheck",
+    Callback = function(v) _G.AimbotWallCheck = v end
+})
+AimbotTab:AddToggle({
+    Name = "Team Check", Standardwert = false, Speichern = true, Flag = "AimbotTeamCheck",
+    Callback = function(v) _G.AimbotTeamCheck = v end
+})
+AimbotTab:AddToggle({
+    Name = "Knocked Check", Default = false, Save = true, Flag = "AimbotKnockedCheck",
+    Callback = function(v) _G.AimbotKnockedCheck = v end
+})
+
+AimbotTab:AddSection({ Name = "FOV-Einstellungen" })
+AimbotTab:AddToggle({
+    Name = "FOV-Kreis anzeigen", Standardwert = false, Speichern = true, Flag = "AimbotShowFOV",
+    Callback = function(v) _G.AimbotShowFOV = v end
+})
+AimbotTab:AddSlider({
+    Name = "FOV-Radius", Min = 0, Max = 500, Standardwert = 263,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 1, Wertname = "px",
+    Speichern = wahr, Flagge = "AimbotFOVRadius",
+    Callback = function(v) _G.AimbotFOVRadius = v end
+})
+
+AimbotTab:AddSection({ Name = "Zielerfassung" })
+AimbotTab:AddDropdown({
+    Name = "Zielteil", Standardwert = "Kopf",
+    Optionen = {"Kopf","HumanoidRootPart","Torso,LeftArm,RightArm,LeftLeg,RightLeg"},
+    Speichern = wahr, Flagge = "AimbotTargetPart",
+    Callback = function(v) _G.AimbotTargetPart = v end
+})
+AimbotTab:AddToggle({
+    Name = "Vorhersage", Standardwert = false, Speichern = true, Flag = "Aimbot-Vorhersage",
+    Callback = function(v) _G.AimbotPrediction = v end
+})
+AimbotTab:AddSlider({
+    Name = "Glättung", Min = 0, Max = 20, Standardwert = 5,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 1, Wertname = "",
+    Speichern = wahr, Flagge = "Zielbot-Glättung",
+    Callback = function(v) _G.AimbotSmoothing = v end
+})
+-- =============================================
+-- STILLE ZIELTAB
+-- =============================================
+
+local SilentAimTab = Window:MakeTab({
+    Name = "Silent Aim",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+SilentAimTab:AddSection({ Name = "Silent Aim" })
+SilentAimTab:AddToggle({
+    Name = "Silent Aim", Standardwert = false, Speichern = true, Flag = "SilentAimEnabled",
+    Callback = function(v) _G.SilentAimEnabled = v end
+})
+SilentAimTab:AddKeybind({
+    Name = "Tastenkombination für lautloses Zielen", Standard = "K", Speichern = true, Flag = "Tastenkombination für lautloses Zielen",
+    Callback = function(v) _G.SilentAimKeybind = v end
+})
+SilentAimTab:AddSlider({
+    Name = "Schussgeschwindigkeit [Sekunden]", Min = 0, Max = 2, Standard = 0,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 0.1, Wertname = "s",
+    Speichern = wahr, Flagge = "SilentAimShootSpeed",
+    Callback = function(v) _G.SilentAimShootSpeed ​​= v end
+})
+
+SilentAimTab:AddSection({ Name = "FOV-Einstellungen" })
+SilentAimTab:AddToggle({
+    Name = "FOV-Kreis anzeigen", Standardwert = false, Speichern = true, Flag = "SilentAimShowFOV",
+    Callback = function(v) _G.SilentAimShowFOV = v end
+})
+SilentAimTab:AddSlider({
+    Name = "FOV-Größe", Min = 0, Max = 500, Standardwert = 100,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 1, Wertname = "",
+    Speichern = wahr, Flagge = "SilentAimFOVSize",
+    Callback = function(v) _G.SilentAimFOVSize = v end
+})
+SilentAimTab:AddColorpicker({
+    Name = "FOV Color", Default = Color3.fromRGB(255, 255, 255),
+    Flag = "SilentAimFOVColor", Speichern = true,
+    Callback = function(v) _G.SilentAimFOVColor = v end
+})
+
+SilentAimTab:AddSection({ Name = "Checks" })
+SilentAimTab:AddToggle({
+    Name = "Geklopfte Schecks", Standardwert = false, Speichern = true, Flag = "StilleSchecks",
+    Callback = function(v) _G.SilentKnockedCheck = v end
+})
+SilentAimTab:AddToggle({
+    Name = "Teamprüfung", Standardwert = false, Speichern = true, Flag = "Stille Teamprüfung",
+    Callback = function(v) _G.SilentTeamCheck = v end
+})
+SilentAimTab:AddToggle({
+    Name = "Wall Check", Standardwert = false, Speichern = true, Flag = "SilentWallCheck",
+    Callback = function(v) _G.SilentWallCheck = v end
+})
+
+SilentAimTab:AddSection({ Name = "Zielerfassung" })
+SilentAimTab:AddDropdown({
+    Name = "Trefferteile", Standardwert = "Kopf",
+    Optionen = {"Kopf","HumanoidRootPart","Torso,LeftArm,RightArm,LeftLeg,RightLeg"},
+    Speichern = wahr, Flag = "SilentHitParts",
+    Callback = function(v) _G.SilentHitParts = v end
+})
+
+-- =============================================
+-- REITER FÜR WAFFENMODIFIKATIONEN
+-- =============================================
+
+local GunModsTab = Window:MakeTab({
+    Name = "Waffenmodifikationen",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+GunModsTab:AddSection({ Name = "Waffenmodifikations-Tab\nWaffenwerte und Schussmechaniken ändern!" })
+GunModsTab:AddSection({ Name = "Waffen-Mods" })
+
+GunModsTab:AddToggle({
+    Name = "Automatisches Nachladen", Standardwert = false, Speichern = true, Flag = "WaffenAutoNachladen",
+    Callback = function(v) _G.GunAutoReload = v end
+})
+GunModsTab:AddToggle({
+    Name = "Schnellfeuer", Standardwert = false, Speichern = true, Flag = "GunRapidFire",
+    Callback = function(v) _G.GunRapidFire = v end
+})
+GunModsTab:AddToggle({
+    Name = "Kein Rückstoß", Standardwert = false, Speichern = true, Flag = "GunNoRecoil",
+    Callback = function(v) _G.GunNoRecoil = v end
+})
+GunModsTab:AddDropdown({
+    Name = "Schussgeräusch", Standard = "Standard",
+    Optionen = {"Standard","Leise,","Laut,"Benutzerdefiniert"},
+    Speichern = wahr, Flagge = "GunSound",
+    Callback = function(v) _G.GunSound = v end
+})
+GunModsTab:AddSlider({
+    Name = "Fadenkreuzgröße", Min = 1, Max = 100, Standard = 25,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 1, Wertname = "Größe",
+    Speichern = wahr, Flagge = "GunCrosshairSize",
+    Callback = function(v) _G.GunCrosshairSize = v end
+})
+GunModsTab:AddSlider({
+    Name = "Ziel-Sichtfeld", Min = 10, Max = 120, Standard = 40,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 1, Wertname = "FOV",
+    Speichern = wahr, Flagge = "GunAimFOV",
+    Callback = function(v) _G.GunAimFOV = v end
+})
+
+-- =============================================
+-- Registerkarte „Auto-Modifikationen“
+-- =============================================
+
+local CarModsTab = Window:MakeTab({
+    Name = "Car Mods",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+CarModsTab:AddSection({ Name = "Fahrzeug-Registerkarte\nFahrzeugleistung und -verhalten anpassen!" })
+CarModsTab:AddSection({ Name = "Fahrzeug-Mods" })
+
+CarModsTab:AddToggle({
+    Name = "Fahrzeug-Gottmodus", Standard = false, Speichern = true, Flag = "Fahrzeug-Gottmodus",
+    Callback = function(v) _G.VehicleGodmode = v end
+})
+CarModsTab:AddToggle({
+    Name = "Unendlicher Treibstoff", Standardwert = false, Speichern = true, Flag = "Unendlicher Treibstoff",
+    Callback = function(v) _G.InfiniteFuel = v end
+})
+CarModsTab:AddToggle({
+    Name = "Grip Boost", Standardwert = false, Speichern = true, Flag = "GripBoost",
+    Callback = function(v) _G.GripBoost = v end
+})
+CarModsTab:AddToggle({
+    Name = "Anti Crash Damage", Standardwert = false, Speichern = true, Flag = "AntiCrashDamage",
+    Callback = function(v) _G.AntiCrashDamage = v end
+})
+CarModsTab:AddToggle({
+    Name = "Gesperrte Autos betreten [Linksklick]", Standard = false, Speichern = true, Flag = "EnterLockedCars",
+    Callback = function(v) _G.EnterLockedCars = v end
+})
+CarModsTab:AddToggle({
+    Name = "Unsichtbares Nummernschild", Standardwert = false, Speichern = true, Flag = "UnsichtbaresNummernschild",
+    Callback = function(v) _G.InvisibleNumberplate = v end
+})
+CarModsTab:AddTextbox({
+    Name = "Nummernschildtext", Standard = "VoreX", TextDisappear = false,
+    Callback = function(v) _G.NumberplateText = v end
+})
+
+CarModsTab:AddSection({ Name = "CarFly Options" })
+CarModsTab:AddToggle({
+    Name = "Car Fly", Standardwert = false, Speichern = true, Flag = "CarFly",
+    Callback = function(v) _G.CarFly = v end
+})
+CarModsTab:AddToggle({
+    Name = "Mobile Car Fly", Standardwert = false, Speichern = true, Flag = "MobileCarFly",
+    Callback = function(v) _G.MobileCarFly = v end
+})
+CarModsTab:AddToggle({
+    Name = "Vehicle Fling", Standardwert = false, Speichern = true, Flag = "VehicleFling",
+    Callback = function(v) _G.VehicleFling = v end
+})
+CarModsTab:AddKeybind({
+    Name = "Car Fly Keybind", Standard = "X", Speichern = true, Flag = "CarFlyKeybind",
+    Callback = function(v) _G.CarFlyKeybind = v end
+})
+CarModsTab:AddSlider({
+    Name = "Auto-Fluggeschwindigkeit", Min = 10, Max = 500, Standard = 100,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 1, Wertname = "Geschwindigkeit",
+    Speichern = wahr, Flagge = "CarFlySpeed",
+    Callback = function(v) _G.CarFlySpeed ​​= v end
+})
+
+CarModsTab:AddSection({ Name = "Fahrzeugsprung" })
+CarModsTab:AddSlider({
+    Name = "Sprunghöhe", Min = 10, Max = 500, Standardwert = 100,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 1, Wertname = "Leistung",
+    Speichern = wahr, Flagge = "FahrzeugSprunghöhe",
+    Callback = function(v) _G.VehicleJumpHeight = v end
+})
+CarModsTab:AddSlider({
+    Name = "Vorwärtsleistung", Min = 10, Max = 300, Standard = 60,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 1, Wertname = "Boost",
+    Speichern = wahr, Flagge = "Fahrzeugvorwärtsleistung",
+    Callback = function(v) _G.VehicleForwardPower = v end
+})
+CarModsTab:AddButton({ Name = "Car Jump", Callback = function() end })
+CarModsTab:AddKeybind({
+    Name = "Sprung-Tastenkombination", Standard = "F2", Speichern = true, Flag = "Fahrzeug-Sprung-Tastenkombination",
+    Callback = function(v) _G.VehicleJumpKeybind = v end
+})
+
+CarModsTab:AddSection({ Name = "Mods" })
+CarModsTab:AddButton({ Name = "Sofortiger Geschwindigkeitsschub", Callback = function() end })
+CarModsTab:AddKeybind({
+    Name = "Sofort-Boost-Tastenkombination", Standard = "F3", Speichern = true, Flag = "Sofort-Boost-Tastenkombination",
+    Callback = function(v) _G.InstantBoostKeybind = v end
+})
+CarModsTab:AddToggle({
+    Name = "Beschleunigungsboost", Standardwert = false, Speichern = true, Flag = "Beschleunigungsboost",
+    Callback = function(v) _G.AccelerationBoost = v end
+})
+CarModsTab:AddSlider({
+    Name = "Sofortige Stärkesteigerung", Min = 1, Max = 10, Standardwert = 2,5,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 0,5, Wertname = "x",
+    Speichern = wahr, Flag = "InstantBoostStrength",
+    Callback = function(v) _G.InstantBoostStrength = v end
+})
+CarModsTab:AddSlider({
+    Name = "Beschleunigungsmultiplikator", Min = 1, Max = 10, Standardwert = 2,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 0,5, Wertname = "x",
+    Speichern = wahr, Flag = "Beschleunigungsmultiplikator",
+    Callback = function(v) _G.AccelerationMultiplier = v end
+})
+
+CarModsTab:AddSection({ Name = "Tuning Mods" })
+CarModsTab:AddTextbox({ Name = "Armor", Default = "0", TextDisappear = false, Callback = function(v) _G.CarArmor = tonumber(v) end })
+CarModsTab:AddTextbox({ Name = "Bremsen", Default = "0", TextDisappear = false, Callback = function(v) _G.CarBrakes = tonumber(v) end })
+CarModsTab:AddTextbox({ Name = "Engine", Default = "0", TextDisappear = false, Callback = function(v) _G.CarEngine = tonumber(v) end })
+
+CarModsTab:AddSection({ Name = "Extras" })
+CarModsTab:AddButton({ Name = "Aus dem Fahrzeug springen", Callback = function() end })
+CarModsTab:AddButton({ Name = "Eigenes Auto eingeben", Callback = function() end })
+CarModsTab:AddButton({ Name = "Eigenes Auto mitbringen", Callback = function() end })
+CarModsTab:AddButton({ Name = "Nächstes E-Bike stehlen", Callback = function() end })
+
+CarModsTab:AddSection({ Name = "Sonstige Optionen" })
+CarModsTab:AddDropdown({
+    Name = "Fahrzeuggeräusch", Standard = "Standard",
+    Optionen = {"Standard","Leise,","Laut,"Benutzerdefiniert"},
+    Speichern = wahr, Flagge = "Fahrzeuggeräusch",
+    Callback = function(v) _G.VehicleSound = v end
+})
+CarModsTab:AddSlider({
+    Name = "Federungshöhe", Min = 0, Max = 5, Standardwert = 0,9,
+    Farbe = Color3.fromRGB(95, 180, 220), Inkrement = 0.1, Wertname = "",
+    Speichern = wahr, Flagge = "Federungshöhe",
+    Callback = function(v) _G.SuspensionHeight = v end
+-- =============================================
+-- VISUELLES ARTIKEL
+-- =============================================
+
+local VisualsTab = Window:MakeTab({
+    Name = "Visuals",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+VisualsTab:AddSection({ Name = "Visuals Tab\nSpieler und Objekte durch Wände hervorheben!" })
+VisualsTab:AddSection({ Name = "Visuals" })
+
+VisualsTab:AddToggle({ Name = "Namen anzeigen", Default = false, Save = true, Flag = "VisualsShowNames", Callback = function(v) _G.VisualsShowNames = v end })
+VisualsTab:AddToggle({ Name = "Team anzeigen", Default = false, Save = true, Flag = "VisualsShowTeam", Callback = function(v) _G.VisualsShowTeam = v end })
+VisualsTab:AddToggle({ Name = "Status anzeigen", Default = false, Save = true, Flag = "VisualsShowHealth", Callback = function(v) _G.VisualsShowHealth = v end })
+VisualsTab:AddToggle({ Name = "Gewünschte anzeigen", Default = false, Save = true, Flag = "VisualsShowWanted", Callback = function(v) _G.VisualsShowWanted = v end })
+VisualsTab:AddToggle({ Name = "Skeleton ESP", Default = false, Save = true, Flag = "SkeletonESP", Callback = function(v) _G.SkeletonESP = v end })
+
+VisualsTab:AddSection({ Name = "ESP-Optionen" })
+VisualsTab:AddColorpicker({ Name = "Skeleton Color", Default = Color3.fromRGB(255, 255, 255), Flag = "SkeletonColor", Save = true, Callback = function(v) _G.SkeletonColor = v end })
+VisualsTab:AddDropdown({
+    Name = "Text Schriftart", Standard = "Cartoon",
+    Optionen = {"Cartoon","Legacy","Antique","Bodoni","Code,","Fantasy,","Gotham,","Highway,","SciFi,","Arcade"},
+    Speichern = wahr, Flagge = "VisualsTextFont",
+    Callback = function(v) _G.VisualsTextFont = v end
+})
+VisualsTab:AddSlider({ Name = "Textgröße", Min = 8, Max = 40, Default = 16, Color = Color3.fromRGB(95, 180, 220), Increment = 1, ValueName = "px", Save = true, Flag = "VisualsTextSize", Callback = function(v) _G.VisualsTextSize = v end })
+VisualsTab:AddSlider({ Name = "Max Range", Min = 100, Max = 5000, Default = 1400, Color = Color3.fromRGB(95, 180, 220), Increment = 50, ValueName = "studs", Save = true, Flag = "VisualsMaxRange", Callback = function(v) _G.VisualsMaxRange = v end })
+
+-- =============================================
+-- BEWEGUNGSTAB
+-- =============================================
+
+local MovementTab = Window:MakeTab({
+    Name = "Bewegung",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+MovementTab:AddSection({ Name = "Bewegungs-Tab\nVerbessere deine Bewegungsfähigkeiten und Geschwindigkeit!" })
+MovementTab:AddSection({ Name = "Hauptoptionen" })
+
+MovementTab:AddToggle({ Name = "NoClip", Default = false, Save = true, Flag = "MovementNoClip", Callback = function(v) _G.MovementNoClip = v end })
+MovementTab:AddTextbox({ Name = "Gehgeschwindigkeitsbonus", Default = "0", TextDisappear = false, Callback = function(v) _G.WalkspeedBoost = tonumber(v) end })
+MovementTab:AddToggle({ Name = "Spinbot", Default = false, Save = true, Flag = "MovementSpinbot", Callback = function(v) _G.MovementSpinbot = v end })
+
+MovementTab:AddSection({ Name = "Fly Settings" })
+MovementTab:AddToggle({ Name = "Spieler fliegen", Default = false, Save = true, Flag = "MovementFly", Callback = function(v) _G.MovementFly = v end })
+MovementTab:AddToggle({ Name = "Doppeltippen zum Fliegen", Default = false, Save = true, Flag = "Doppeltippen zum Fliegen", Callback = function(v) _G.DoubleTapFly = v end })
+MovementTab:AddKeybind({ Name = "Fly Bind", Default = "V", Save = true, Flag = "FlyBind", Callback = function(v) _G.FlyBind = v end })
+MovementTab:AddSlider({ Name = "Fluggeschwindigkeit", Min = 10, Max = 300, Default = 70, Color = Color3.fromRGB(95, 180, 220), Increment = 1, ValueName = "Geschwindigkeit", Save = true, Flag = "Fluggeschwindigkeit", Callback = function(v) _G.FlySpeed ​​= v end })
+
+MovementTab:AddSection({ Name = "Misc" })
+MovementTab:AddButton({ Name = "Unendliche Ausdauer", Callback = function() end })
+MovementTab:AddToggle({ Name = "Unendlicher Sprung", Default = false, Save = true, Flag = "Unendlicher Sprung", Callback = function(v) _G.InfJump = v end })
+
+-- =============================================
+-- GRAFIK-REIBER
+-- =============================================
+
+local GraphicsTab = Window:MakeTab({
+    Name = "Grafik",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+GraphicsTab:AddSection({ Name = "Grafik-Registerkarte\nVisuelle Einstellungen und Rendering-Optionen anpassen!" })
+GraphicsTab:AddSection({ Name = "Grafiken" })
+
+GraphicsTab:AddToggle({ Name = "XRay", Default = false, Save = true, Flag = "GraphicsXRay", Callback = function(v) _G.GraphicsXRay = v end })
+GraphicsTab:AddToggle({ Name = "Fullbright", Default = false, Save = true, Flag = "Fullbright", Callback = function(v) _G.Fullbright = v end })
+GraphicsTab:AddToggle({ Name = "Atmosphäre entfernen", Default = false, Save = true, Flag = "Atmosphäre entfernen", Callback = function(v) _G.RemoveAtmosphere = v end })
+
+GraphicsTab:AddSection({ Name = "Skin Changer" })
+GraphicsTab:AddDropdown({ Name = "Spieler auswählen", Default = "Keine", Options = {"Keine"}, Save = false, Flag = "SkinPlayer", Callback = function(v) _G.SkinPlayer = v end })
+GraphicsTab:AddToggle({ Name = "Zufallsschleife", Default = false, Save = true, Flag = "SkinRandomLoop", Callback = function(v) _G.SkinRandomLoop = v end })
+
+GraphicsTab:AddSection({ Name = "Spieleroptionen" })
+GraphicsTab:AddToggle({ Name = "Geistermodus", Default = false, Save = true, Flag = "Geistermodus", Callback = function(v) _G.GhostMode = v end })
+GraphicsTab:AddToggle({ Name = "Regenbogen-Geistermodus", Default = false, Save = true, Flag = "RegenbogenGeistermodus", Callback = function(v) _G.RainbowGhostMode = v end })
+GraphicsTab:AddColorpicker({ Name = "Geisterfarbe", Default = Color3.fromRGB(255, 255, 255), Flag = "Geisterfarbe", Save = true, Callback = function(v) _G.GhostColor = v end })
+GraphicsTab:AddToggle({ Name = "Spielerspur", Default = false, Save = true, Flag = "Spielerspur", Callback = function(v) _G.PlayerTrail = v end })
+GraphicsTab:AddColorpicker({ Name = "Trail Color", Default = Color3.fromRGB(255, 255, 255), Flag = "TrailColor", Save = true, Callback = function(v) _G.TrailColor = v end })
+
+-- =============================================
+-- TELEPORT-RETABLE
+-- =============================================
+
+local TeleportTab = Window:MakeTab({
+    Name = "Teleport",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+TeleportTab:AddSection({ Name = "Teleport-Tab\nSchnelles Teleportieren – mit Ihrem Fahrzeug, Standorten und Hilfsmitteln." })
+TeleportTab:AddSection({ Name = "Hauptsteuerung" })
+
+TeleportTab:AddSlider({ Name = "Teleportgeschwindigkeit (empfohlen auf 190)", Min = 50, Max = 500, Default = 190, Color = Color3.fromRGB(95, 180, 220), Increment = 1, ValueName = "Studs/s", Save = true, Flag = "TeleportSpeed", Callback = function(v) _G.TeleportSpeed ​​= v end })
+TeleportTab:AddButton({ Name = "Teleport stoppen", Callback = function() _G.TeleportActive = false end })
+TeleportTab:AddToggle({ Name = "Click Teleport [Nur PC]", Default = false, Save = true, Flag = "ClickTeleport", Callback = function(v) _G.ClickTeleport = v end })
+
+TeleportTab:AddSection({ Name = "Ziele automatisch finden" })
+TeleportTab:AddButton({ Name = "Nächster gesuchter Spieler", Callback = function() end })
+TeleportTab:AddButton({ Name = "Zum Händler teleportieren", Callback = function() end })
+TeleportTab:AddButton({ Name = "Nächster Verkaufsautomat", Callback = function() end })
+
+TeleportTab:AddSection({ Name = "Arbeitsplätze" })
+TeleportTab:AddButton({ Name = "Busunternehmen", Callback = function() end })
+TeleportTab:AddButton({ Name = "Feuerwache", Callback = function() end })
+TeleportTab:AddButton({ Name = "Polizeistation", Callback = function() end })
+TeleportTab:AddButton({ Name = "Truck Company", Callback = function() end })
+
+TeleportTab:AddSection({ Name = "Raubüberfälle" })
+TeleportTab:AddButton({ Name = "Ares Fuel", Callback = function() end })
+TeleportTab:AddButton({ Name = "Bank", Callback = function() end })
+TeleportTab:AddButton({ Name = "Kleidergeschäft", Callback = function() end })
+TeleportTab:AddButton({ Name = "Erwins Club", Callback = function() end })
+TeleportTab:AddButton({ Name = "Farm Shop", Callback = function() end })
+TeleportTab:AddButton({ Name = "Gas n Go Fuel", Callback = function() end })
+TeleportTab:AddButton({ Name = "Grüner Container", Callback = function() end })
+TeleportTab:AddButton({ Name = "Schmuck", Callback = function() end })
+TeleportTab:AddButton({ Name = "Osso Fuel", Callback = function() end })
+TeleportTab:AddButton({ Name = "Werkzeugladen", Callback = function() end })
+TeleportTab:AddButton({ Name = "Gelber Container", Callback = function() end })
+
+TeleportTab:AddSection({ Name = "Verwendbare Orte" })
+TeleportTab:AddButton({ Name = "Autohaus", Callback = function() end })
+TeleportTab:AddButton({ Name = "Hospital", Callback = function() end })
+TeleportTab:AddButton({ Name = "Gefängnis", Callback = function() end })
+TeleportTab:AddButton({ Name = "Tuning Garage", Callback = function() end })
+
+TeleportTab:AddSection({ Name = "Sicherheit & Hilfsprogramme" })
+TeleportTab:AddParagraph("Gegenstände aus dem Auto entfernen.", "Teleportiert zum Autohändler und lässt das Fahrzeug neu erscheinen – entfernt Gegenstände/Bomben aus dem Auto.")
+TeleportTab:AddButton({ Name = "Gegenstände aus dem Auto entfernen", Callback = function() end })
+TeleportTab:AddButton({ Name = "Teleport in die sichere Zone", Callback = function() end })
+TeleportTab:AddButton({ Name = "Teleport in die sichere Zone (2)", Callback = function() end })
+TeleportTab:AddButton({ Name = "Teleport in die sichere Zone (3)", Callback = function() end })
+
+-- =============================================
+-- ANIMATIONEN-REIBER
+-- =============================================
+
+local AnimationsTab = Window:MakeTab({
+    Name = "Animationen",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+AnimationsTab:AddSection({ Name = "Animations-Tab\nBenutzerdefinierte Emotes und Animationen ausführen!" })
+AnimationsTab:AddSection({ Name = "Pre Emotes" })
+
+AnimationsTab:AddToggle({ Name = "Fake Cuffed", Default = false, Save = true, Flag = "AnimFakeCuffed", Callback = function(v) _G.AnimFakeCuffed = v end })
+AnimationsTab:AddToggle({ Name = "Fake Dead", Default = false, Save = true, Flag = "AnimFakeDead", Callback = function(v) _G.AnimFakeDead = v end })
+AnimationsTab:AddToggle({ Name = "Jerk Off", Default = false, Save = true, Flag = "AnimJerkOff", Callback = function(v) _G.AnimJerkOff = v end })
+
+AnimationsTab:AddSection({ Name = "Benutzerdefinierte Animationen" })
+AnimationsTab:AddDropdown({
+    Name = "Animation auswählen", Standard = "Standardtanz",
+    Optionen = {
+        "Helikopter", "Rizz Backflip", "Standardtanz", "Slickback", "Fahrzeug",
+        "Beat Da Koto Nai, Snow Surfer, Tank, Spider, Take The L, Sit, Skibidi Toilet"
+    },
+    Speichern = wahr, Flagge = "AusgewählteAnimation",
+    Callback = function(v) _G.SelectedAnimation = v end
+})
+AnimationsTab:AddButton({
+    Name = "Animation abspielen",
+    Callback = Funktion()
+        OrionLib:MakeNotification({
+            Name = "VoreX Animations",
+            Inhalt = "Wiedergabe: " .. tostring(_G.SelectedAnimation or "Standardtanz"),
+            Bild = "rbxassetid://4483345998",
+            Zeit = 3
+        })
+    Ende
+})
+
+-- =============================================
+-- POLIZEI-TAB
+-- =============================================
+
+local PoliceTab = Window:MakeTab({
+    Name = "Polizei",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+PoliceTab:AddSection({ Name = "Polizei-Tab\nTools für Polizei-Gameplay und Ausweichmanöver!" })
+PoliceTab:AddSection({ Name = "Polizei-Autofarm" })
+
+PoliceTab:AddToggle({ Name = "RadarFarm", Default = false, Save = true, Flag = "PoliceRadarFarm", Callback = function(v) _G.PoliceRadarFarm = v end })
+PoliceTab:AddButton({ Name = "Anti AFK", Callback = function() end })
+PoliceTab:AddDropdown({
+    Name = "Standorte von Radaranlagen", Standardwert = "Keine",
+    Optionen = {"Keine","In der Kirche [unten]","In der Kirche [oben]","Kreisverkehr","Im Weihnachtsbaum","Bank","Unter dem Tunnel","Containerseite"},
+    Speichern = wahr, Flagge = "RadarFarmLocation",
+    Callback = function(v) _G.RadarFarmLocation = v end
+})
+
+PoliceTab:AddSection({ Name = "Polizeioptionen" })
+PoliceTab:AddToggle({ Name = "Auto Taser", Default = false, Save = true, Flag = "PoliceAutoTaser", Callback = function(v) _G.PoliceAutoTaser = v end })
+
+PoliceTab:AddSection({ Name = "Automatische Verhaftung" })
+PoliceTab:AddToggle({ Name = "Automatische Handschellen [Gesuchte Spieler in der Nähe]", Default = false, Save = true, Flag = "PoliceAutoCuff", Callback = function(v) _G.PoliceAutoCuff = v end })
+
+PoliceTab:AddSection({ Name = "Anti Police" })
+PoliceTab:AddToggle({ Name = "Anti Taser", Default = false, Save = true, Flag = "AntiTaser", Callback = function(v) _G.AntiTaser = v end })
+PoliceTab:AddButton({ Name = "Aus dem Fahrzeug springen [Wenn Handschellen angelegt]", Callback = function() end })
+
+-- =============================================
+-- BYPASS-TAB
+-- =============================================
+
+local BypassTab = Window:MakeTab({
+    Name = "Bypass",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+BypassTab:AddSection({ Name = "Bypass Tab\nUmgehe die Spielsicherheit und die Anti-Cheat-Maßnahmen!" })
+BypassTab:AddSection({ Name = "Freecam" })
+
+BypassTab:AddButton({
+    Name = "Bypass Freecam",
+    Callback = Funktion()
+        OrionLib:MakeNotification({
+            Name = "VoreX Bypass",
+            Inhalt = "Freecam-Umgehung aktiviert! Drücken Sie Umschalt + P zum Umschalten."
+            Bild = "rbxassetid://4483345998",
+            Zeit = 4
+        })
+    Ende
+})
+BypassTab:AddParagraph("So schalten Sie die Freikamera ein.", "Um die Freikamera zu verwenden, müssen Sie Umschalt + P drücken.")
+
+BypassTab:AddSection({ Name = "Anti Cheat" })
+BypassTab:AddToggle({ Name = "Anti Cheat Bypass", Default = false, Save = true, Flag = "AntiCheatBypass", Callback = function(v) _G.AntiCheatBypass = v end })
+BypassTab:AddParagraph("Warnung", "Dies blockiert den Anti-Cheat nicht vollständig.\nEs verringert lediglich die Wahrscheinlichkeit, gekickt zu werden.")
+
+-- =============================================
+-- Registerkarte „Sonstiges“
+-- =============================================
+
+local MiscTab = Window:MakeTab({
+    Name = "Sonstiges",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+MiscTab:AddSection({ Name = "Sonstige Registerkarte\nZusätzliche Hilfsprogramme und Sicherheitsfunktionen!" })
+MiscTab:AddSection({ Name = "Player" })
+
+MiscTab:AddButton({
+    Name = "Respawn [Du verlierst deine Waffen usw.]",
+    Callback = Funktion()
+        game:GetService("Players").LocalPlayer.Character:BreakJoints()
+    Ende
+})
+MiscTab:AddButton({ Name = "Selbstwiederbelebung", Callback = function() end })
+MiscTab:AddButton({
+    Name = "Spiel verlassen",
+    Callback = Funktion()
+        game:GetService("Players").LocalPlayer:Kick("VoreX - Left Game")
+    Ende
+})
+MiscTab:AddButton({ Name = "Schilder entfernen", Callback = function() end })
+MiscTab:AddButton({ Name = "Bäume entfernen", Callback = function() end })
+MiscTab:AddToggle({ Name = "Automatische Stempelung", Default = false, Save = true, Flag = "MiscAutoPunch", Callback = function(v) _G.MiscAutoPunch = v end })
+MiscTab:AddToggle({ Name = "Automatische Sammlung", Default = false, Save = true, Flag = "MiscAutoCollect", Callback = function(v) _G.MiscAutoCollect = v end })
+MiscTab:AddParagraph("Informationen automatisch sammeln!", "Die automatische Informationssammlung funktioniert derzeit nur für Cash Rob. Dies wird in Kürze behoben.")
+
+MiscTab:AddSection({ Name = "Sicherheit" })
+MiscTab:AddToggle({ Name = "Anti Fall", Default = false, Save = true, Flag = "MiscAntiFall", Callback = function(v) _G.MiscAntiFall = v end })
+
+MiscTab:AddSection({ Name = "Server" })
+MiscTab:AddButton({
+    Name = "Server Hop",
+    Callback = Funktion()
+        local ts = game:GetService("TeleportService")
+        ts:Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+    Ende
+})
+MiscTab:AddButton({
+    Name = "Rejoin",
+    Callback = Funktion()
+        local ts = game:GetService("TeleportService")
+        ts:Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+    Ende
+})
+MiscTab:AddToggle({ Name = "Automatische Wiederaufnahme nach dem Rauswurf", Default = false, Save = true, Flag = "AutoRejoin", Callback = function(v) _G.AutoRejoin = v end })
+
+-- =============================================
+-- ORION INITIALISIEREN
+-- =============================================
+
+OrionLib:Init()
