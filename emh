@@ -5,16 +5,14 @@
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local Workspace = game:GetService("Workspace")
-local Camera = Workspace.CurrentCamera
+local Lighting = game:GetService("Lighting")
+local SoundService = game:GetService("SoundService")
+local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- Key System
 local function GetKey()
     local ok, result = pcall(function()
         return game:HttpGet("https://pastebin.com/raw/J91SXgzW")
@@ -53,14 +51,6 @@ local AimbotWallCheck = false
 local AimbotTeamCheck = false
 local AimbotKnockedCheck = false
 local ShowFOVCircle = false
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Visible = false
-FOVCircle.Radius = AimbotFOV
-FOVCircle.Color = Color3.fromRGB(255,255,255)
-FOVCircle.Thickness = 1
-FOVCircle.Filled = false
-
-local SilentAimEnabled = false
 local FlyEnabled = false
 local FlySpeed = 70
 local NoClipEnabled = false
@@ -68,19 +58,128 @@ local SpinbotEnabled = false
 local InfJumpEnabled = false
 local WalkspeedBoost = 16
 local ESPEnabled = false
-local FullbrightEnabled = false
-local XRayEnabled = false
-local GhostModeEnabled = false
-local PlayerTrailEnabled = false
+local HitSound = nil
+local MobileAimbotEnabled = false
+local MobileFlyEnabled = false
+
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Visible = false
+FOVCircle.Radius = AimbotFOV
+FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Thickness = 2
+FOVCircle.Filled = false
+
+-- =============================================
+--         MOBILE AIMBOT BUTTON
+-- =============================================
+local MobileAimbotGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+MobileAimbotGui.Name = "CoreXMobileAimbot"
+MobileAimbotGui.ResetOnSpawn = false
+
+local AimbotBtn = Instance.new("TextButton", MobileAimbotGui)
+AimbotBtn.Size = UDim2.new(0, 80, 0, 80)
+AimbotBtn.Position = UDim2.new(0, 20, 0.6, 0)
+AimbotBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+AimbotBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AimbotBtn.Text = "🎯\nAIM"
+AimbotBtn.TextScaled = true
+AimbotBtn.Font = Enum.Font.GothamBold
+AimbotBtn.BackgroundTransparency = 0.3
+AimbotBtn.Visible = false
+Instance.new("UICorner", AimbotBtn).CornerRadius = UDim.new(1, 0)
+
+local AimbotBtnActive = false
+AimbotBtn.InputBegan:Connect(function() AimbotBtnActive = true end)
+AimbotBtn.InputEnded:Connect(function() AimbotBtnActive = false end)
+
+-- =============================================
+--         MOBILE FLY BUTTON
+-- =============================================
+local MobileFlyGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+MobileFlyGui.Name = "CoreXMobileFly"
+MobileFlyGui.ResetOnSpawn = false
+
+local FlyBtn = Instance.new("TextButton", MobileFlyGui)
+FlyBtn.Size = UDim2.new(0, 80, 0, 80)
+FlyBtn.Position = UDim2.new(0, 110, 0.6, 0)
+FlyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+FlyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyBtn.Text = "✈️\nFLY"
+FlyBtn.TextScaled = true
+FlyBtn.Font = Enum.Font.GothamBold
+FlyBtn.BackgroundTransparency = 0.3
+FlyBtn.Visible = false
+Instance.new("UICorner", FlyBtn).CornerRadius = UDim.new(1, 0)
+
+local FlyBtnActive = false
+FlyBtn.MouseButton1Click:Connect(function()
+    FlyBtnActive = not FlyBtnActive
+    FlyBtn.BackgroundColor3 = FlyBtnActive and Color3.fromRGB(0,150,0) or Color3.fromRGB(30,30,30)
+    if FlyBtnActive then
+        local char = LocalPlayer.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hrp and hum then
+            hum.PlatformStand = true
+            local bv = Instance.new("BodyVelocity", hrp)
+            bv.Name = "CoreXFlyBV"
+            bv.Velocity = Vector3.zero
+            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            local bg = Instance.new("BodyGyro", hrp)
+            bg.Name = "CoreXFlyBG"
+            bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            bg.P = 1e4
+        end
+    else
+        local char = LocalPlayer.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hrp then
+            local bv = hrp:FindFirstChild("CoreXFlyBV")
+            local bg = hrp:FindFirstChild("CoreXFlyBG")
+            if bv then bv:Destroy() end
+            if bg then bg:Destroy() end
+        end
+        if hum then hum.PlatformStand = false end
+    end
+end)
+
+-- Up/Down Buttons for Mobile Fly
+local UpBtn = Instance.new("TextButton", MobileFlyGui)
+UpBtn.Size = UDim2.new(0, 60, 0, 60)
+UpBtn.Position = UDim2.new(0, 200, 0.6, 0)
+UpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+UpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+UpBtn.Text = "⬆️"
+UpBtn.TextScaled = true
+UpBtn.BackgroundTransparency = 0.3
+UpBtn.Visible = false
+Instance.new("UICorner", UpBtn).CornerRadius = UDim.new(1, 0)
+
+local DownBtn = Instance.new("TextButton", MobileFlyGui)
+DownBtn.Size = UDim2.new(0, 60, 0, 60)
+DownBtn.Position = UDim2.new(0, 200, 0.68, 0)
+DownBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+DownBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DownBtn.Text = "⬇️"
+DownBtn.TextScaled = true
+DownBtn.BackgroundTransparency = 0.3
+DownBtn.Visible = false
+Instance.new("UICorner", DownBtn).CornerRadius = UDim.new(1, 0)
+
+local UpActive, DownActive = false, false
+UpBtn.InputBegan:Connect(function() UpActive = true end)
+UpBtn.InputEnded:Connect(function() UpActive = false end)
+DownBtn.InputBegan:Connect(function() DownActive = true end)
+DownBtn.InputEnded:Connect(function() DownActive = false end)
 
 -- =============================================
 --              FUNCTIONS
 -- =============================================
-
--- Get closest player in FOV
 local function GetClosestPlayer()
-    local closest = nil
-    local shortestDist = AimbotFOV
+    local closest, shortestDist = nil, AimbotFOV
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
             local hrp = player.Character:FindFirstChild("HumanoidRootPart")
@@ -90,16 +189,13 @@ local function GetClosestPlayer()
                 if AimbotKnockedCheck and hum.Health <= 0 then continue end
                 if AimbotWallCheck then
                     local ray = Ray.new(Camera.CFrame.Position, (hrp.Position - Camera.CFrame.Position).Unit * 1000)
-                    local hit = Workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character})
+                    local hit = workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character})
                     if hit and not hit:IsDescendantOf(player.Character) then continue end
                 end
                 local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
                 if onScreen then
-                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - (Camera.ViewportSize / 2)).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closest = player
-                    end
+                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - Camera.ViewportSize/2).Magnitude
+                    if dist < shortestDist then shortestDist = dist; closest = player end
                 end
             end
         end
@@ -107,72 +203,7 @@ local function GetClosestPlayer()
     return closest
 end
 
--- Fly Logic
-local FlyPart = nil
-local FlyConnection = nil
-local function StartFly()
-    local char = LocalPlayer.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if not hrp or not hum then return end
-    hum.PlatformStand = true
-    FlyPart = Instance.new("BodyVelocity", hrp)
-    FlyPart.Velocity = Vector3.zero
-    FlyPart.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-    local BG = Instance.new("BodyGyro", hrp)
-    BG.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-    BG.P = 1e4
-    FlyConnection = RunService.Heartbeat:Connect(function()
-        if not FlyEnabled then
-            FlyPart:Destroy()
-            BG:Destroy()
-            hum.PlatformStand = false
-            FlyConnection:Disconnect()
-            return
-        end
-        local dir = Vector3.zero
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + Camera.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - Camera.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir = dir - Camera.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir = dir + Camera.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.new(0,1,0) end
-        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then dir = dir - Vector3.new(0,1,0) end
-        FlyPart.Velocity = dir * FlySpeed
-        BG.CFrame = Camera.CFrame
-    end)
-end
-
-local function StopFly()
-    FlyEnabled = false
-end
-
--- ESP
 local ESPObjects = {}
-local function CreateESP(player)
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "CoreXESP"
-    billboard.Size = UDim2.new(0, 100, 0, 40)
-    billboard.StudsOffset = Vector3.new(0, 3, 0)
-    billboard.AlwaysOnTop = true
-    local nameLabel = Instance.new("TextLabel", billboard)
-    nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    nameLabel.TextScaled = true
-    nameLabel.Text = player.Name
-    nameLabel.Name = "NameLabel"
-    local healthLabel = Instance.new("TextLabel", billboard)
-    healthLabel.Size = UDim2.new(1, 0, 0.5, 0)
-    healthLabel.Position = UDim2.new(0, 0, 0.5, 0)
-    healthLabel.BackgroundTransparency = 1
-    healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-    healthLabel.TextScaled = true
-    healthLabel.Name = "HealthLabel"
-    ESPObjects[player] = billboard
-    return billboard
-end
-
 local function UpdateESP()
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
@@ -180,78 +211,32 @@ local function UpdateESP()
             local hum = player.Character:FindFirstChildOfClass("Humanoid")
             if hrp and hum then
                 if not ESPObjects[player] then
-                    CreateESP(player)
+                    local bb = Instance.new("BillboardGui")
+                    bb.Name = "CoreXESP"
+                    bb.Size = UDim2.new(0, 120, 0, 50)
+                    bb.StudsOffset = Vector3.new(0, 3, 0)
+                    bb.AlwaysOnTop = true
+                    local nl = Instance.new("TextLabel", bb)
+                    nl.Size = UDim2.new(1,0,0.5,0)
+                    nl.BackgroundTransparency = 1
+                    nl.TextColor3 = Color3.fromRGB(255,255,255)
+                    nl.TextScaled = true
+                    nl.Text = player.Name
+                    nl.Name = "NameLabel"
+                    local hl = Instance.new("TextLabel", bb)
+                    hl.Size = UDim2.new(1,0,0.5,0)
+                    hl.Position = UDim2.new(0,0,0.5,0)
+                    hl.BackgroundTransparency = 1
+                    hl.TextColor3 = Color3.fromRGB(0,255,0)
+                    hl.TextScaled = true
+                    hl.Name = "HealthLabel"
+                    ESPObjects[player] = bb
                 end
                 local esp = ESPObjects[player]
                 esp.Parent = hrp
                 esp.Enabled = ESPEnabled
-                local health = esp:FindFirstChild("HealthLabel")
-                if health then
-                    health.Text = "HP: " .. math.floor(hum.Health)
-                end
-            end
-        end
-    end
-end
-
--- NoClip
-local NoClipConnection = nil
-local function StartNoClip()
-    NoClipConnection = RunService.Stepped:Connect(function()
-        if NoClipEnabled and LocalPlayer.Character then
-            for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-        end
-    end)
-end
-StartNoClip()
-
--- InfJump
-UserInputService.JumpRequest:Connect(function()
-    if InfJumpEnabled and LocalPlayer.Character then
-        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
-    end
-end)
-
--- Fullbright
-local Lighting = game:GetService("Lighting")
-local OriginalBrightness = Lighting.Brightness
-local OriginalAmbient = Lighting.Ambient
-local function SetFullbright(v)
-    if v then
-        Lighting.Brightness = 2
-        Lighting.Ambient = Color3.fromRGB(178,178,178)
-        Lighting.OutdoorAmbient = Color3.fromRGB(178,178,178)
-    else
-        Lighting.Brightness = OriginalBrightness
-        Lighting.Ambient = OriginalAmbient
-    end
-end
-
--- Spinbot
-local SpinConnection = nil
-local function StartSpinbot()
-    SpinConnection = RunService.Heartbeat:Connect(function()
-        if SpinbotEnabled and LocalPlayer.Character then
-            local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(10), 0)
-            end
-        end
-    end)
-end
-StartSpinbot()
-
--- Ghost Mode
-local function SetGhostMode(v)
-    if LocalPlayer.Character then
-        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.LocalTransparencyModifier = v and 0.7 or 0
+                local hl = esp:FindFirstChild("HealthLabel")
+                if hl then hl.Text = "HP: " .. math.floor(hum.Health) end
             end
         end
     end
@@ -262,36 +247,178 @@ end
 -- =============================================
 RunService.RenderStepped:Connect(function()
     -- FOV Circle
-    if ShowFOVCircle then
-        FOVCircle.Visible = true
-        FOVCircle.Position = Camera.ViewportSize / 2
-        FOVCircle.Radius = AimbotFOV
-    else
-        FOVCircle.Visible = false
-    end
+    FOVCircle.Visible = ShowFOVCircle
+    FOVCircle.Position = Camera.ViewportSize / 2
+    FOVCircle.Radius = AimbotFOV
 
-    -- Aimbot
-    if AimbotEnabled then
+    -- Normal + Mobile Aimbot
+    if AimbotEnabled or (MobileAimbotEnabled and AimbotBtnActive) then
         local target = GetClosestPlayer()
         if target and target.Character then
-            local part = target.Character:FindFirstChild(AimbotPart) or target.Character:FindFirstChild("HumanoidRootPart")
+            local part = target.Character:FindFirstChild(AimbotPart)
+                or target.Character:FindFirstChild("HumanoidRootPart")
             if part then
-                local targetCFrame = CFrame.new(Camera.CFrame.Position, part.Position)
-                Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, 1 / AimbotSmoothing)
+                local targetCF = CFrame.new(Camera.CFrame.Position, part.Position)
+                Camera.CFrame = Camera.CFrame:Lerp(targetCF, 1 / math.max(AimbotSmoothing, 1))
             end
         end
     end
 
-    -- ESP Update
+    -- Mobile Fly Movement
+    if FlyBtnActive and LocalPlayer.Character then
+        local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local bv = hrp:FindFirstChild("CoreXFlyBV")
+            local bg = hrp:FindFirstChild("CoreXFlyBG")
+            if bv and bg then
+                local dir = Camera.CFrame.LookVector * FlySpeed
+                if UpActive then dir = dir + Vector3.new(0, FlySpeed, 0) end
+                if DownActive then dir = dir - Vector3.new(0, FlySpeed, 0) end
+                bv.Velocity = dir
+                bg.CFrame = Camera.CFrame
+            end
+        end
+    end
+
+    -- ESP
     if ESPEnabled then UpdateESP() end
 
     -- Walkspeed
     if LocalPlayer.Character then
         local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            hum.WalkSpeed = WalkspeedBoost
+        if hum then hum.WalkSpeed = WalkspeedBoost end
+    end
+
+    -- Spinbot
+    if SpinbotEnabled and LocalPlayer.Character then
+        local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(10), 0) end
+    end
+end)
+
+-- NoClip
+RunService.Stepped:Connect(function()
+    if NoClipEnabled and LocalPlayer.Character then
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then part.CanCollide = false end
         end
     end
+end)
+
+-- InfJump
+UserInputService.JumpRequest:Connect(function()
+    if InfJumpEnabled and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end
+end)
+
+-- =============================================
+--              CUSTOM DATA
+-- =============================================
+local Skys = {
+    ["Universe Thing"] = { SkyboxBk="rbxassetid://159454299", SkyboxDn="rbxassetid://159454296", SkyboxFt="rbxassetid://159454293", SkyboxLf="rbxassetid://159454286", SkyboxRt="rbxassetid://159454300", SkyboxUp="rbxassetid://159454288" },
+    ["Purple Thing"]   = { SkyboxBk="rbxassetid://16553658937", SkyboxDn="rbxassetid://16553660713", SkyboxFt="rbxassetid://16553662144", SkyboxLf="rbxassetid://16553664042", SkyboxRt="rbxassetid://16553665766", SkyboxUp="rbxassetid://16553667750" },
+    ["Aurora"]         = { SkyboxBk="rbxassetid://128600713462148", SkyboxDn="rbxassetid://129205524771926", SkyboxFt="rbxassetid://91295549823939", SkyboxLf="rbxassetid://78049621027692", SkyboxRt="rbxassetid://97339481871314", SkyboxUp="rbxassetid://85412515491070" },
+    ["Orange"]         = { SkyboxBk="rbxassetid://75806894209584", SkyboxDn="rbxassetid://88955070832523", SkyboxFt="rbxassetid://137588397191887", SkyboxLf="rbxassetid://124955584991258", SkyboxRt="rbxassetid://140343245463200", SkyboxUp="rbxassetid://134383800716949" },
+    ["Moonlight"]      = { SkyboxBk="rbxassetid://116261899350523", SkyboxDn="rbxassetid://92257816837512", SkyboxFt="rbxassetid://108326981730305", SkyboxLf="rbxassetid://131834280163741", SkyboxRt="rbxassetid://99525277797873", SkyboxUp="rbxassetid://125425274451894" },
+}
+
+local function ApplySky(name)
+    if name == "Default" then
+        local sky = Lighting:FindFirstChildOfClass("Sky")
+        if sky then sky:Destroy() end
+        return
+    end
+    local data = Skys[name]
+    if not data then return end
+    local sky = Lighting:FindFirstChildOfClass("Sky") or Instance.new("Sky", Lighting)
+    for k, v in pairs(data) do sky[k] = v end
+end
+
+local WeaponSkins = {
+    Blood  = { primary="rbxassetid://122271132142798", secondary="rbxassetid://87911546375139" },
+    Gold   = { primary="rbxassetid://102006781490148", secondary="rbxassetid://102006781490148" },
+    Galaxy = { primary="rbxassetid://122271132142798", secondary="rbxassetid://83994660888462" },
+    Black  = { primary="rbxassetid://122271132142798", secondary="rbxassetid://122271132142798" },
+    Devil  = { primary="rbxassetid://81551553428680", secondary="rbxassetid://81551553428680" },
+    Ozean  = { primary="rbxassetid://138912737283012", secondary="rbxassetid://138912737283012" },
+}
+
+local GearSkins = {
+    Black  = "rbxassetid://122271132142798",
+    Gold   = "rbxassetid://102006781490148",
+    Devil  = "rbxassetid://81551553428680",
+    Ozean  = "rbxassetid://138912737283012",
+    Galaxy = "rbxassetid://122271132142798",
+}
+
+local function ApplyWeaponSkin(name)
+    local skin = WeaponSkins[name]
+    if not skin then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    for _, tool in pairs(char:GetChildren()) do
+        if tool:IsA("Tool") then
+            for _, part in pairs(tool:GetDescendants()) do
+                if part:IsA("BasePart") or part:IsA("MeshPart") then
+                    pcall(function()
+                        local mesh = part:FindFirstChildOfClass("SpecialMesh")
+                        if mesh then mesh.TextureId = skin.primary
+                        else
+                            local d = part:FindFirstChildOfClass("Decal") or Instance.new("Decal", part)
+                            d.Texture = skin.primary
+                        end
+                    end)
+                end
+            end
+        end
+    end
+end
+
+local function ApplyGearSkin(name)
+    local tex = GearSkins[name]
+    if not tex then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    for _, obj in pairs(char:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            pcall(function()
+                local mesh = obj:FindFirstChildOfClass("SpecialMesh")
+                if mesh then mesh.TextureId = tex end
+            end)
+        end
+    end
+end
+
+local CustomSounds = {
+    Minecraft="rbxassetid://8766809464", Simple="rbxassetid://3748776946",
+    Bing="rbxassetid://6607204501", Skeet="rbxassetid://5633695679",
+    Rust="rbxassetid://1255040462", Pick="rbxassetid://1347140027",
+    Shine="rbxassetid://5693220817", Neverlose="rbxassetid://8679627751",
+    Metal="rbxassetid://8917041751", Shield="rbxassetid://140073271098075",
+    Headshot="rbxassetid://2513174484", Grrr="rbxassetid://8603227350",
+    Rizz="rbxassetid://89848519630209", Mommy="rbxassetid://90759147003294",
+}
+
+local function SetCustomSound(name)
+    if HitSound then HitSound:Destroy(); HitSound = nil end
+    if name == "None" then return end
+    local id = CustomSounds[name]
+    if not id then return end
+    HitSound = Instance.new("Sound")
+    HitSound.SoundId = id
+    HitSound.Volume = 1
+    HitSound.Parent = SoundService
+end
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(char)
+        local hum = char:WaitForChild("Humanoid")
+        hum.HealthChanged:Connect(function(hp)
+            if hp < hum.MaxHealth and HitSound then HitSound:Play() end
+        end)
+    end)
 end)
 
 -- =============================================
@@ -312,6 +439,10 @@ end })
 local AimbotTab = Window:CreateTab("Aimbot", 4483345998)
 AimbotTab:CreateSection("Main Settings")
 AimbotTab:CreateToggle({ Name = "Enable Aimbot", CurrentValue = false, Flag = "AimbotEnabled", Callback = function(v) AimbotEnabled = v end })
+AimbotTab:CreateToggle({ Name = "Mobile Aimbot Button", CurrentValue = false, Flag = "MobileAimbot", Callback = function(v)
+    MobileAimbotEnabled = v
+    AimbotBtn.Visible = v
+end })
 AimbotTab:CreateSection("Visibility & Checks")
 AimbotTab:CreateToggle({ Name = "Wall Check", CurrentValue = false, Flag = "AimbotWallCheck", Callback = function(v) AimbotWallCheck = v end })
 AimbotTab:CreateToggle({ Name = "Team Check", CurrentValue = false, Flag = "AimbotTeamCheck", Callback = function(v) AimbotTeamCheck = v end })
@@ -321,7 +452,6 @@ AimbotTab:CreateToggle({ Name = "Show FOV Circle", CurrentValue = false, Flag = 
 AimbotTab:CreateSlider({ Name = "FOV Radius", Range = {0,500}, Increment = 1, Suffix = "px", CurrentValue = 263, Flag = "AimbotFOV", Callback = function(v) AimbotFOV = v end })
 AimbotTab:CreateSection("Targeting")
 AimbotTab:CreateDropdown({ Name = "Target Part", Options = {"Head","HumanoidRootPart","Torso","LeftArm","RightArm"}, CurrentOption = {"Head"}, Flag = "AimbotPart", Callback = function(v) AimbotPart = v[1] end })
-AimbotTab:CreateToggle({ Name = "Prediction", CurrentValue = false, Flag = "AimbotPred", Callback = function(v) end })
 AimbotTab:CreateSlider({ Name = "Smoothing", Range = {1,20}, Increment = 1, Suffix = "", CurrentValue = 5, Flag = "AimbotSmooth", Callback = function(v) AimbotSmoothing = v end })
 
 -- =============================================
@@ -329,7 +459,7 @@ AimbotTab:CreateSlider({ Name = "Smoothing", Range = {1,20}, Increment = 1, Suff
 -- =============================================
 local SilentAimTab = Window:CreateTab("Silent Aim", 4483345998)
 SilentAimTab:CreateSection("Silent Aim")
-SilentAimTab:CreateToggle({ Name = "Silent Aim", CurrentValue = false, Flag = "SilentAim", Callback = function(v) SilentAimEnabled = v end })
+SilentAimTab:CreateToggle({ Name = "Silent Aim", CurrentValue = false, Flag = "SilentAim", Callback = function(v) end })
 SilentAimTab:CreateSlider({ Name = "FOV Size", Range = {0,500}, Increment = 1, Suffix = "", CurrentValue = 100, Flag = "SilentFOV", Callback = function(v) end })
 SilentAimTab:CreateSection("Checks")
 SilentAimTab:CreateToggle({ Name = "Knocked Check", CurrentValue = false, Flag = "SilentKnocked", Callback = function(v) end })
@@ -343,25 +473,14 @@ SilentAimTab:CreateDropdown({ Name = "Hit Parts", Options = {"Head","HumanoidRoo
 -- =============================================
 local GunModsTab = Window:CreateTab("Gun Mods", 4483345998)
 GunModsTab:CreateSection("Gun Mods")
-GunModsTab:CreateToggle({ Name = "Auto Reload", CurrentValue = false, Flag = "AutoReload", Callback = function(v)
-    if v then
-        RunService.Heartbeat:Connect(function()
-            if v and LocalPlayer.Character then
-                local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
-                if tool then
-                    local fire = tool:FindFirstChild("Fire") or tool:FindFirstChildOfClass("RemoteEvent")
-                    pcall(function() tool:Activate() end)
-                end
-            end
-        end)
-    end
-end })
-GunModsTab:CreateToggle({ Name = "No Recoil", CurrentValue = false, Flag = "NoRecoil", Callback = function(v)
-    if v then
-        RunService.RenderStepped:Connect(function()
-            if v then Camera.CFrame = Camera.CFrame end
-        end)
-    end
+GunModsTab:CreateToggle({ Name = "No Recoil", CurrentValue = false, Flag = "NoRecoil", Callback = function(v) end })
+GunModsTab:CreateToggle({ Name = "Rapid Fire", CurrentValue = false, Flag = "RapidFire", Callback = function(v)
+    RunService.Heartbeat:Connect(function()
+        if v and LocalPlayer.Character then
+            local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+            if tool then pcall(function() tool:Activate() end) end
+        end
+    end)
 end })
 GunModsTab:CreateDropdown({ Name = "Gun Sound", Options = {"Default","Silent","Loud"}, CurrentOption = {"Default"}, Flag = "GunSound", Callback = function(v) end })
 GunModsTab:CreateSlider({ Name = "Crosshair Size", Range = {1,100}, Increment = 1, Suffix = "Size", CurrentValue = 25, Flag = "CrosshairSize", Callback = function(v) end })
@@ -371,21 +490,11 @@ GunModsTab:CreateSlider({ Name = "Crosshair Size", Range = {1,100}, Increment = 
 -- =============================================
 local CarModsTab = Window:CreateTab("Car Mods", 4483345998)
 CarModsTab:CreateSection("Vehicle Mods")
-CarModsTab:CreateToggle({ Name = "Vehicle Godmode", CurrentValue = false, Flag = "VehicleGod", Callback = function(v)
-    RunService.Heartbeat:Connect(function()
-        if v and LocalPlayer.Character then
-            local vehicle = LocalPlayer.Character:FindFirstChildOfClass("VehicleSeat") or Workspace:FindFirstChild("Vehicle")
-            if vehicle then
-                pcall(function() vehicle.MaxHealth = math.huge; vehicle.Health = math.huge end)
-            end
-        end
-    end)
-end })
 CarModsTab:CreateToggle({ Name = "Infinite Fuel", CurrentValue = false, Flag = "InfFuel", Callback = function(v)
     RunService.Heartbeat:Connect(function()
         if v then
-            for _, obj in pairs(Workspace:GetDescendants()) do
-                if obj.Name == "Fuel" or obj.Name == "FuelLevel" then
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj.Name:lower():find("fuel") and obj:IsA("NumberValue") then
                     pcall(function() obj.Value = 100 end)
                 end
             end
@@ -401,31 +510,21 @@ CarModsTab:CreateToggle({ Name = "Anti Crash Damage", CurrentValue = false, Flag
     end)
 end })
 CarModsTab:CreateInput({ Name = "Numberplate Text", PlaceholderText = "CoreX", RemoveTextAfterFocusLost = false, Callback = function(v)
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj.Name == "Numberplate" or obj.Name == "LicensePlate" then
-            pcall(function() obj.SurfaceGui.TextLabel.Text = v end)
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name:lower():find("plate") or obj.Name:lower():find("number") then
+            pcall(function()
+                if obj:IsA("TextLabel") then obj.Text = v end
+            end)
         end
     end
 end })
 CarModsTab:CreateSection("CarFly Options")
-CarModsTab:CreateToggle({ Name = "Car Fly", CurrentValue = false, Flag = "CarFly", Callback = function(v)
-    RunService.Heartbeat:Connect(function()
-        if v and LocalPlayer.Character then
-            local seat = LocalPlayer.Character:FindFirstChildOfClass("Humanoid").SeatPart
-            if seat then
-                local bv = seat:FindFirstChild("CarFlyBV") or Instance.new("BodyVelocity", seat)
-                bv.Name = "CarFlyBV"
-                bv.MaxForce = Vector3.new(math.huge,math.huge,math.huge)
-                local dir = Vector3.zero
-                if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + Camera.CFrame.LookVector end
-                if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - Camera.CFrame.LookVector end
-                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.new(0,1,0) end
-                bv.Velocity = dir * 100
-            end
-        end
-    end)
+CarModsTab:CreateToggle({ Name = "Mobile Car Fly Button", CurrentValue = false, Flag = "MobileCarFly", Callback = function(v)
+    FlyBtn.Visible = v
+    UpBtn.Visible = v
+    DownBtn.Visible = v
 end })
-CarModsTab:CreateSlider({ Name = "Car Fly Speed", Range = {10,500}, Increment = 1, Suffix = "Speed", CurrentValue = 100, Flag = "CarFlySpeed", Callback = function(v) end })
+CarModsTab:CreateSlider({ Name = "Car Fly Speed", Range = {10,500}, Increment = 1, Suffix = "Speed", CurrentValue = 100, Flag = "CarFlySpeed", Callback = function(v) FlySpeed = v end })
 CarModsTab:CreateSection("Extras")
 CarModsTab:CreateButton({ Name = "Jump Out Of Vehicle", Callback = function()
     if LocalPlayer.Character then
@@ -434,10 +533,10 @@ CarModsTab:CreateButton({ Name = "Jump Out Of Vehicle", Callback = function()
     end
 end })
 CarModsTab:CreateButton({ Name = "Bring Own Car", Callback = function()
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("VehicleSeat") and obj:FindFirstChild("Owner") then
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("VehicleSeat") then
             pcall(function()
-                if obj.Owner.Value == LocalPlayer.Name then
+                if obj:FindFirstChild("Owner") and obj.Owner.Value == LocalPlayer.Name then
                     obj.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-10)
                 end
             end)
@@ -458,30 +557,6 @@ VisualsTab:CreateToggle({ Name = "Show Names + Health ESP", CurrentValue = false
         end
     end
 end })
-VisualsTab:CreateToggle({ Name = "Show Wanted", CurrentValue = false, Flag = "ShowWanted", Callback = function(v)
-    RunService.Heartbeat:Connect(function()
-        if v then
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        local esp = ESPObjects[player]
-                        if esp then
-                            local wanted = esp:FindFirstChild("WantedLabel") or Instance.new("TextLabel", esp)
-                            wanted.Name = "WantedLabel"
-                            wanted.Size = UDim2.new(1,0,0.3,0)
-                            wanted.Position = UDim2.new(0,0,0.7,0)
-                            wanted.BackgroundTransparency = 1
-                            wanted.TextColor3 = Color3.fromRGB(255,0,0)
-                            wanted.TextScaled = true
-                            wanted.Text = "⭐ WANTED"
-                        end
-                    end
-                end
-            end
-        end
-    end)
-end })
 VisualsTab:CreateSlider({ Name = "Text Size", Range = {8,40}, Increment = 1, Suffix = "px", CurrentValue = 16, Flag = "TextSize", Callback = function(v) end })
 VisualsTab:CreateSlider({ Name = "Max Range", Range = {100,5000}, Increment = 50, Suffix = "studs", CurrentValue = 1400, Flag = "MaxRange", Callback = function(v) end })
 
@@ -496,19 +571,24 @@ MovementTab:CreateInput({ Name = "Walkspeed Boost", PlaceholderText = "16", Remo
 end })
 MovementTab:CreateToggle({ Name = "Spinbot", CurrentValue = false, Flag = "Spinbot", Callback = function(v) SpinbotEnabled = v end })
 MovementTab:CreateSection("Fly Settings")
-MovementTab:CreateToggle({ Name = "Player Fly", CurrentValue = false, Flag = "PlayerFly", Callback = function(v)
-    FlyEnabled = v
-    if v then StartFly() end
+MovementTab:CreateToggle({ Name = "Player Fly Button (Mobile)", CurrentValue = false, Flag = "PlayerFly", Callback = function(v)
+    FlyBtn.Visible = v
+    UpBtn.Visible = v
+    DownBtn.Visible = v
 end })
 MovementTab:CreateSlider({ Name = "Fly Speed", Range = {10,300}, Increment = 1, Suffix = "Speed", CurrentValue = 70, Flag = "FlySpeed", Callback = function(v) FlySpeed = v end })
 MovementTab:CreateSection("Misc")
 MovementTab:CreateToggle({ Name = "Inf Jump", CurrentValue = false, Flag = "InfJump", Callback = function(v) InfJumpEnabled = v end })
 MovementTab:CreateButton({ Name = "Infinite Stamina", Callback = function()
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj.Name == "Stamina" or obj.Name == "StaminaValue" then
-            pcall(function() obj.Value = 100 end)
+    local VU = game:GetService("VirtualUser")
+    RunService.Heartbeat:Connect(function()
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj.Name:lower():find("stamina") and obj:IsA("NumberValue") then
+                pcall(function() obj.Value = obj.MaxValue or 100 end)
+            end
         end
-    end
+    end)
+    Rayfield:Notify({ Title = "CoreX", Content = "Infinite Stamina activated!", Duration = 3 })
 end })
 
 -- =============================================
@@ -516,28 +596,62 @@ end })
 -- =============================================
 local GraphicsTab = Window:CreateTab("Graphics", 4483345998)
 GraphicsTab:CreateSection("Graphics")
-GraphicsTab:CreateToggle({ Name = "Fullbright", CurrentValue = false, Flag = "Fullbright", Callback = function(v) SetFullbright(v) end })
+GraphicsTab:CreateToggle({ Name = "Fullbright", CurrentValue = false, Flag = "Fullbright", Callback = function(v)
+    if v then
+        Lighting.Brightness = 2
+        Lighting.Ambient = Color3.fromRGB(178,178,178)
+        Lighting.OutdoorAmbient = Color3.fromRGB(178,178,178)
+    else
+        Lighting.Brightness = 1
+        Lighting.Ambient = Color3.fromRGB(70,70,70)
+    end
+end })
 GraphicsTab:CreateToggle({ Name = "Remove Atmosphere", CurrentValue = false, Flag = "RemoveAtmo", Callback = function(v)
     local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
     if atmo then atmo.Density = v and 0 or 0.395 end
 end })
 GraphicsTab:CreateSection("Player Options")
 GraphicsTab:CreateToggle({ Name = "Ghost Mode", CurrentValue = false, Flag = "GhostMode", Callback = function(v)
-    GhostModeEnabled = v
-    SetGhostMode(v)
+    if LocalPlayer.Character then
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.LocalTransparencyModifier = v and 0.7 or 0
+            end
+        end
+    end
 end })
 GraphicsTab:CreateToggle({ Name = "Rainbow Ghost Mode", CurrentValue = false, Flag = "RainbowGhost", Callback = function(v)
-    if v then
-        RunService.Heartbeat:Connect(function()
-            if v and LocalPlayer.Character then
-                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.Color = Color3.fromHSV(tick() % 1, 1, 1)
-                        part.LocalTransparencyModifier = 0.5
-                    end
+    RunService.Heartbeat:Connect(function()
+        if v and LocalPlayer.Character then
+            for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Color = Color3.fromHSV(tick() % 1, 1, 1)
+                    part.LocalTransparencyModifier = 0.5
                 end
             end
-        end)
+        end
+    end)
+end })
+GraphicsTab:CreateToggle({ Name = "Player Trail", CurrentValue = false, Flag = "PlayerTrail", Callback = function(v)
+    if LocalPlayer.Character then
+        local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local trail = hrp:FindFirstChild("CoreXTrail")
+            if v and not trail then
+                local att0 = Instance.new("Attachment", hrp)
+                att0.Position = Vector3.new(0, 1, 0)
+                local att1 = Instance.new("Attachment", hrp)
+                att1.Position = Vector3.new(0, -1, 0)
+                local t = Instance.new("Trail", hrp)
+                t.Name = "CoreXTrail"
+                t.Attachment0 = att0
+                t.Attachment1 = att1
+                t.Lifetime = 0.5
+                t.Color = ColorSequence.new(Color3.fromRGB(0,150,255), Color3.fromRGB(255,0,255))
+            elseif not v and trail then
+                trail:Destroy()
+            end
+        end
     end
 end })
 
@@ -546,6 +660,21 @@ end })
 -- =============================================
 local TeleportTab = Window:CreateTab("Teleport", 4483345998)
 TeleportTab:CreateSection("Main Control")
+TeleportTab:CreateToggle({ Name = "Click Teleport [Only PC]", CurrentValue = false, Flag = "ClickTeleport", Callback = function(v)
+    if v then
+        UserInputService.InputBegan:Connect(function(input)
+            if v and input.UserInputType == Enum.UserInputType.MouseButton1 then
+                local unitRay = Camera:ScreenPointToRay(input.Position.X, input.Position.Y)
+                local ray = Ray.new(unitRay.Origin, unitRay.Direction * 1000)
+                local hit, pos = workspace:FindPartOnRay(ray, LocalPlayer.Character)
+                if hit and LocalPlayer.Character then
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0,3,0))
+                end
+            end
+        end)
+    end
+end })
+TeleportTab:CreateSection("Auto Find Targets")
 TeleportTab:CreateButton({ Name = "Nearest Wanted Player", Callback = function()
     local closest, dist = nil, math.huge
     for _, p in pairs(Players:GetPlayers()) do
@@ -558,26 +687,40 @@ TeleportTab:CreateButton({ Name = "Nearest Wanted Player", Callback = function()
         end
     end
     if closest and LocalPlayer.Character then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = closest.CFrame * CFrame.new(0,0,3)
+        LocalPlayer.Character.HumanoidRootPart.CFrame = closest.CFrame * CFrame.new(0,0,4)
+        Rayfield:Notify({ Title = "Teleport", Content = "Teleported to nearest player!", Duration = 3 })
     end
 end })
 TeleportTab:CreateSection("Work Places")
 TeleportTab:CreateButton({ Name = "Police Station", Callback = function()
     if LocalPlayer.Character then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(0, 10, 0))
+        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 10, 0)
         Rayfield:Notify({ Title = "Teleport", Content = "Teleported to Police Station!", Duration = 3 })
     end
 end })
+TeleportTab:CreateSection("Safety")
 TeleportTab:CreateButton({ Name = "Teleport to Safe Zone", Callback = function()
     if LocalPlayer.Character then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(0, 10, 0))
+        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 10, 0)
         Rayfield:Notify({ Title = "Teleport", Content = "Teleported to Safe Zone!", Duration = 3 })
     end
+end })
+TeleportTab:CreateButton({ Name = "Remove things from your Car", Callback = function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+    Rayfield:Notify({ Title = "CoreX", Content = "Rejoining to remove car items!", Duration = 3 })
 end })
 
 -- =============================================
 --             ANIMATIONS TAB
 -- =============================================
+local AnimIds = {
+    ["Helicopter"]    = "rbxassetid://5222413868",
+    ["Default Dance"] = "rbxassetid://507771019",
+    ["Slickback"]     = "rbxassetid://10921267246",
+    ["Sit"]           = "rbxassetid://2506281703",
+    ["Take The L"]    = "rbxassetid://507765644",
+    ["Spider"]        = "rbxassetid://616010382",
+}
 local AnimationsTab = Window:CreateTab("Animations", 4483345998)
 AnimationsTab:CreateSection("Pre Emotes")
 AnimationsTab:CreateToggle({ Name = "Fake Cuffed", CurrentValue = false, Flag = "FakeCuffed", Callback = function(v)
@@ -603,14 +746,6 @@ AnimationsTab:CreateToggle({ Name = "Fake Dead", CurrentValue = false, Flag = "F
     end
 end })
 AnimationsTab:CreateSection("Custom Animations")
-local AnimIds = {
-    ["Helicopter"] = "rbxassetid://5222413868",
-    ["Default Dance"] = "rbxassetid://507771019",
-    ["Slickback"] = "rbxassetid://10921267246",
-    ["Sit"] = "rbxassetid://2506281703",
-    ["Take The L"] = "rbxassetid://507765644",
-    ["Spider"] = "rbxassetid://616010382",
-}
 local SelectedAnim = "Default Dance"
 AnimationsTab:CreateDropdown({ Name = "Select Animation", Options = {"Helicopter","Default Dance","Slickback","Sit","Take The L","Spider"}, CurrentOption = {"Default Dance"}, Flag = "SelectedAnim", Callback = function(v) SelectedAnim = v[1] end })
 AnimationsTab:CreateButton({ Name = "Play Animation", Callback = function()
@@ -619,18 +754,15 @@ AnimationsTab:CreateButton({ Name = "Play Animation", Callback = function()
         if hum and AnimIds[SelectedAnim] then
             local anim = Instance.new("Animation")
             anim.AnimationId = AnimIds[SelectedAnim]
-            local track = hum:LoadAnimation(anim)
-            track:Play()
+            hum:LoadAnimation(anim):Play()
         end
     end
 end })
-AnimationsTab:CreateButton({ Name = "Stop Animation", Callback = function()
+AnimationsTab:CreateButton({ Name = "Stop All Animations", Callback = function()
     if LocalPlayer.Character then
         local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum then
-            for _, track in pairs(hum:GetPlayingAnimationTracks()) do
-                track:Stop()
-            end
+            for _, track in pairs(hum:GetPlayingAnimationTracks()) do track:Stop() end
         end
     end
 end })
@@ -640,26 +772,17 @@ end })
 -- =============================================
 local PoliceTab = Window:CreateTab("Police", 4483345998)
 PoliceTab:CreateSection("Police AutoFarm")
-PoliceTab:CreateToggle({ Name = "RadarFarm", CurrentValue = false, Flag = "RadarFarm", Callback = function(v)
-    RunService.Heartbeat:Connect(function()
-        if v then
-            for _, obj in pairs(Workspace:GetDescendants()) do
-                if obj.Name == "Radar" or obj.Name == "SpeedCamera" then
-                    pcall(function() obj:Activate() end)
-                end
-            end
-        end
-    end)
-end })
+PoliceTab:CreateToggle({ Name = "RadarFarm", CurrentValue = false, Flag = "RadarFarm", Callback = function(v) end })
 PoliceTab:CreateButton({ Name = "Anti AFK", Callback = function()
-    local vu = game:GetService("VirtualUser")
+    local VU = game:GetService("VirtualUser")
     LocalPlayer.Idled:Connect(function()
-        vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        VU:Button2Down(Vector2.new(0,0), Camera.CFrame)
         task.wait(1)
-        vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        VU:Button2Up(Vector2.new(0,0), Camera.CFrame)
     end)
     Rayfield:Notify({ Title = "CoreX", Content = "Anti AFK Activated!", Duration = 3 })
 end })
+PoliceTab:CreateDropdown({ Name = "Radar Farm Locations", Options = {"None","In Church [Below]","In Church [Above]","Traffic Circle","In Christams Tree","Bank","Under Tunnel","Container Side"}, CurrentOption = {"None"}, Flag = "RadarFarmLocation", Callback = function(v) end })
 PoliceTab:CreateSection("Anti Police")
 PoliceTab:CreateToggle({ Name = "Anti Taser", CurrentValue = false, Flag = "AntiTaser", Callback = function(v)
     RunService.Heartbeat:Connect(function()
@@ -685,19 +808,7 @@ end })
 -- =============================================
 local BypassTab = Window:CreateTab("Bypass", 4483345998)
 BypassTab:CreateSection("Anti Cheat")
-BypassTab:CreateToggle({ Name = "Anti Cheat Bypass", CurrentValue = false, Flag = "ACBypass", Callback = function(v)
-    if v then
-        RunService.Heartbeat:Connect(function()
-            pcall(function()
-                for _, script in pairs(Workspace:GetDescendants()) do
-                    if script:IsA("Script") and (script.Name:lower():find("anti") or script.Name:lower():find("cheat")) then
-                        script.Disabled = true
-                    end
-                end
-            end)
-        end)
-    end
-end })
+BypassTab:CreateToggle({ Name = "Anti Cheat Bypass", CurrentValue = false, Flag = "ACBypass", Callback = function(v) end })
 BypassTab:CreateParagraph({ Title = "Warning", Content = "This does not fully block the Anti Cheat." })
 
 -- =============================================
@@ -716,18 +827,16 @@ MiscTab:CreateButton({ Name = "Leave Game", Callback = function()
     LocalPlayer:Kick("CoreX - Left Game")
 end })
 MiscTab:CreateButton({ Name = "Remove Signs", Callback = function()
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj.Name:lower():find("sign") or obj.Name:lower():find("schild") then
-            obj:Destroy()
-        end
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name:lower():find("sign") or obj.Name:lower():find("schild") then pcall(function() obj:Destroy() end) end
     end
+    Rayfield:Notify({ Title = "CoreX", Content = "Signs removed!", Duration = 3 })
 end })
 MiscTab:CreateButton({ Name = "Remove Trees", Callback = function()
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj.Name:lower():find("tree") or obj.Name:lower():find("baum") then
-            obj:Destroy()
-        end
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name:lower():find("tree") or obj.Name:lower():find("baum") then pcall(function() obj:Destroy() end) end
     end
+    Rayfield:Notify({ Title = "CoreX", Content = "Trees removed!", Duration = 3 })
 end })
 MiscTab:CreateToggle({ Name = "Auto Punch", CurrentValue = false, Flag = "AutoPunch", Callback = function(v)
     RunService.Heartbeat:Connect(function()
@@ -762,3 +871,68 @@ MiscTab:CreateToggle({ Name = "Auto Rejoin when kicked", CurrentValue = false, F
         end)
     end
 end })
+
+-- =============================================
+--                CUSTOM TAB
+-- =============================================
+local CustomTab = Window:CreateTab("Custom", 4483345998)
+
+CustomTab:CreateSection("Sky Changer")
+CustomTab:CreateDropdown({
+    Name = "Select Sky",
+    Options = {"Default","Universe Thing","Purple Thing","Aurora","Orange","Moonlight"},
+    CurrentOption = {"Default"},
+    Flag = "SelectedSky",
+    Callback = function(v)
+        ApplySky(v[1])
+        Rayfield:Notify({ Title = "CoreX Sky", Content = "Sky: " .. v[1], Duration = 3 })
+    end
+})
+
+CustomTab:CreateSection("Weapon Skin")
+CustomTab:CreateDropdown({
+    Name = "Select Weapon Skin",
+    Options = {"None","Blood","Gold","Galaxy","Black","Devil","Ozean"},
+    CurrentOption = {"None"},
+    Flag = "WeaponSkin",
+    Callback = function(v)
+        if v[1] ~= "None" then
+            ApplyWeaponSkin(v[1])
+            Rayfield:Notify({ Title = "CoreX Skin", Content = "Weapon Skin: " .. v[1], Duration = 3 })
+        end
+    end
+})
+CustomTab:CreateDropdown({
+    Name = "Select Gear Skin",
+    Options = {"None","Black","Gold","Devil","Ozean","Galaxy"},
+    CurrentOption = {"None"},
+    Flag = "GearSkin",
+    Callback = function(v)
+        if v[1] ~= "None" then
+            ApplyGearSkin(v[1])
+            Rayfield:Notify({ Title = "CoreX Skin", Content = "Gear Skin: " .. v[1], Duration = 3 })
+        end
+    end
+})
+
+CustomTab:CreateSection("Custom Hit Sound")
+CustomTab:CreateDropdown({
+    Name = "Select Hit Sound",
+    Options = {"None","Minecraft","Simple","Bing","Skeet","Rust","Pick","Shine","Neverlose","Metal","Shield","Headshot","Grrr","Rizz","Mommy"},
+    CurrentOption = {"None"},
+    Flag = "HitSound",
+    Callback = function(v)
+        SetCustomSound(v[1])
+        if v[1] ~= "None" and HitSound then
+            HitSound:Play()
+            Rayfield:Notify({ Title = "CoreX Sound", Content = "Hit Sound: " .. v[1], Duration = 3 })
+        end
+    end
+})
+CustomTab:CreateButton({
+    Name = "Preview Sound",
+    Callback = function()
+        if HitSound then HitSound:Play()
+        else Rayfield:Notify({ Title = "CoreX", Content = "Kein Sound ausgewählt!", Duration = 3 }) end
+    end
+})
